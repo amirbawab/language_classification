@@ -2,3 +2,4 @@ It is a Dialog Language Classification task. The goal is to devise a machine lea
 
 This is a project for COMP-551 Applied Machine Learning. For this task, we would be implementing Naive Bayes and k-NN from scratch, and trying other ML algorithms using scikit-learn.
 
+
