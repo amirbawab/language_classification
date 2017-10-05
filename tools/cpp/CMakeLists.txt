@@ -5,7 +5,7 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # Include thirdparty libraries header files
-#include_directories(thirdparty/pugixml/src)
+include_directories(thirdparty/csv)
 
 # Compile with -std=c++11
 add_compile_options(-std=c++11)
