@@ -1,0 +1,5 @@
+site_name: 'Language Classification'
+repo_url: 'https://github.com/sunyam/Language_Classification'
+theme: 'readthedocs'
+pages:
+    - 'Home': 'index.md'
