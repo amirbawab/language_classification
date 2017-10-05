@@ -1,0 +1,14 @@
+{
+    "docs": [
+        {
+            "location": "/",
+            "text": "Welcome to Language Classification",
+            "title": "Home"
+        },
+        {
+            "location": "/#welcome-to-language-classification",
+            "text": "",
+            "title": "Welcome to Language Classification"
+        }
+    ]
+}
