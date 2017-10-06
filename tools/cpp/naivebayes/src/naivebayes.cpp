@@ -56,6 +56,25 @@ void initParams(int argc, char *argv[]) {
     }
 }
 
+/**
+ * Convert a string to a vector of tokens
+ * @param text
+ * @return vector of words
+ */
+std::vector<std::string> tokenize(std::string text) {
+    std::vector<std::string> tokens;
+    char *cstr = new char[text.length() + 1];
+    strcpy(cstr, text.c_str());
+    char * pch;
+    pch = strtok (cstr," \t");
+    while (pch != NULL) {
+        tokens.push_back(pch);
+        pch = strtok (NULL, " ,.-");
+    }
+    delete [] cstr;
+    return tokens;
+}
+
 int main(int argc, char** argv) {
 
     // Initialize parameters
@@ -78,7 +97,8 @@ int main(int argc, char** argv) {
         inputCSV.read_header(io::ignore_extra_column, "Id", "Category", "Text");
         std::cout << ">> Loading: " << g_inputFile << std::endl;
         while(inputCSV.read_row(id, category, text)){
-            // Do something
+            std::vector<std::string> tokens = tokenize(text);
+            std::cout << tokens.size() << std::endl;
         }
 
     } catch (io::error::can_not_open_file exception) {
