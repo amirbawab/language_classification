@@ -5,12 +5,18 @@
 #include <algorithm>
 #include <fstream>
 #include <map>
+#include <vector>
+#include <sstream>
 #include <csv.h>
 
 // Global vars
 std::string g_textFile;
 std::string g_langFile;
 std::string g_outputFile;
+std::vector<std::string> g_algorithms;
+
+// Algorithms
+const std::string ALGO_SPACE = "space";
 
 /**
  * Print program usage to stdout
@@ -22,6 +28,7 @@ void printUsage() {
             << "    -t, --text\t\t\tCSV text file" << std::endl
             << "    -l, --lang\t\t\tCSV language file" << std::endl
             << "    -o, --out\t\t\tCSV output file" << std::endl
+            << "    -a, --algo\t\t\tAlgorithm id to be performed on the text" << std::endl
             << "    -h, --help\t\t\tDisplay this help message" << std::endl;
 }
 
@@ -29,8 +36,6 @@ void printUsage() {
  * Initialize parameters
  * @param argc
  * @param argv
- * @param doc
- * @param res
  */
 void initParams(int argc, char *argv[]) {
 
@@ -38,13 +43,14 @@ void initParams(int argc, char *argv[]) {
             {"text", required_argument, 0, 't'},
             {"lang", required_argument, 0, 'l'},
             {"out", required_argument, 0, 'o'},
+            {"algo", required_argument, 0, 'a'},
             {"help",   no_argument,       0, 'h'},
             {0, 0,                        0, 0}
     };
 
     int optionIndex = 0;
     int c;
-    while ((c = getopt_long(argc, argv, "t:l:o:h", longOptions, &optionIndex)) != -1) {
+    while ((c = getopt_long(argc, argv, "t:l:o:ha:", longOptions, &optionIndex)) != -1) {
         switch (c) {
             case 't':
                 g_textFile = optarg;
@@ -55,6 +61,9 @@ void initParams(int argc, char *argv[]) {
             case 'o':
                 g_outputFile = optarg;
                 break;
+            case 'a':
+                g_algorithms.push_back(optarg);
+                break;
             case 'h':
             default:
                 break;
@@ -62,11 +71,39 @@ void initParams(int argc, char *argv[]) {
     }
 }
 
+/**
+ * Utterance structure
+ */
 struct utt {
     int m_id;
     int m_category;
     std::string m_text;
 };
+
+/**
+ * Apply algorithm on the utterance text
+ * @param algoId
+ * @param map
+ */
+void applyAlgorithm(std::string algoId, std::map<int, struct utt*> &map) {
+    for(auto entry : map) {
+        if(algoId == ALGO_SPACE) {
+            std::string orgText = entry.second->m_text;
+            entry.second->m_text.clear();
+            std::stringstream ss;
+            for(int index=0; index < orgText.length(); index++) {
+                ss << orgText[index];
+                if(orgText[index] != ' ') {
+                    ss << " ";
+                }
+            }
+            entry.second->m_text = ss.str();
+        } else {
+            std::cerr << "Algorithm ID: " << algoId << " was not found." << std::endl;
+            return;
+        }
+    }
+}
 
 int main(int argc, char** argv) {
 
@@ -85,15 +122,16 @@ int main(int argc, char** argv) {
         int id;
         int category;
         std::string text;
-        std::map<int, struct utt> map;
+        std::map<int, struct utt*> map;
 
         // Load language information
         io::CSVReader<2> langCSV(g_langFile);
         langCSV.read_header(io::ignore_extra_column, "Id", "Category");
         std::cout << ">> Loading: " << g_langFile << std::endl;
         while(langCSV.read_row(id, category)){
-            map[id].m_id = id;
-            map[id].m_category = category;
+            map[id] = new struct utt();
+            map[id]->m_id = id;
+            map[id]->m_category = category;
         }
 
         // Load text information
@@ -101,7 +139,13 @@ int main(int argc, char** argv) {
         io::CSVReader<2> textCSV(g_textFile);
         textCSV.read_header(io::ignore_extra_column, "Id", "Text");
         while(textCSV.read_row(id, text)) {
-            map[id].m_text = text;
+            map[id]->m_text = text;
+        }
+
+        // Apply algorithms
+        for(std::string algoId : g_algorithms) {
+            std::cout << ">> Applying algorithm: " << algoId << std::endl;
+            applyAlgorithm(algoId, map);
         }
 
         // Generate new csv
@@ -109,7 +153,9 @@ int main(int argc, char** argv) {
         std::ofstream outFile (g_outputFile);
         outFile << "Id,Category,Text" << std::endl;
         for(auto entry : map) {
-            outFile << entry.second.m_id << "," << entry.second.m_category << "," << entry.second.m_text << std::endl;
+            outFile << entry.second->m_id << "," << entry.second->m_category << ","
+                    << entry.second->m_text << std::endl;
+            delete entry.second;
         }
         outFile.close();
     } catch (io::error::can_not_open_file exception) {
