@@ -14,6 +14,7 @@ std::string g_inputFile;
 std::string g_outputFile;
 std::string g_cacheFile;
 std::string g_loadCacheFile;
+std::string g_sentence;
 
 // Cache types
 const std::string CACHE_WORD = "word";
@@ -30,6 +31,7 @@ void printUsage() {
             << "    -c, --cache     Cache calculated probabilities to a file" << std::endl
             << "    -l, --loadcache Load cache probabilities from file" << std::endl
             << "    -o, --output    Output file" << std::endl
+            << "    -s, --sentence  Sentence to evaluate" << std::endl
             << "    -h, --help      Display this help message" << std::endl;
 }
 
@@ -45,13 +47,14 @@ void initParams(int argc, char *argv[]) {
             {"output", required_argument, 0, 'o'},
             {"cache", required_argument, 0, 'c'},
             {"loadcache", required_argument, 0, 'l'},
+            {"sentence", required_argument, 0, 's'},
             {"help",   no_argument,       0, 'h'},
             {0, 0,                        0, 0}
     };
 
     int optionIndex = 0;
     int c;
-    while ((c = getopt_long(argc, argv, "hi:o:c:l:", longOptions, &optionIndex)) != -1) {
+    while ((c = getopt_long(argc, argv, "hi:o:c:l:s:", longOptions, &optionIndex)) != -1) {
         switch (c) {
             case 'i':
                 g_inputFile = optarg;
@@ -64,6 +67,9 @@ void initParams(int argc, char *argv[]) {
                 break;
             case 'l':
                 g_loadCacheFile = optarg;
+                break;
+            case 's':
+                g_sentence = optarg;
                 break;
             case 'h':
             default:
@@ -204,6 +210,23 @@ int main(int argc, char** argv) {
                 cacheFile.close();
             } else {
                 std::cerr << "Could not open cache file: " << g_cacheFile << std::endl;
+            }
+        }
+
+        // Evaluate a sentence
+        if(!g_sentence.empty()) {
+            std::cout << ">> Evaluating sentence: " << g_sentence << std::endl;
+
+            // Convert sentence to tokens
+            std::vector<std::string> tokens = tokenize(g_sentence);
+            for(auto entry : pCategory) {
+                double val = entry.second;
+                for(std::string token : tokens) {
+                    if(pWordGivenCategory.find(token) != pWordGivenCategory.end()) {
+                        val *= pWordGivenCategory[token][entry.first];
+                    }
+                }
+                std::cout << "P(S | " << entry.first << ") = " << val << std::endl;
             }
         }
 
