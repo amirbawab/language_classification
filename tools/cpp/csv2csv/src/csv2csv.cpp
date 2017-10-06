@@ -25,11 +25,12 @@ void printUsage() {
     std::cout
             << "csv2csv - Merge two csv files into one" << std::endl << std::endl
             << "Usage: csv2csv [-t text.csv] [-l lang.csv] [-o output.csv]" << std::endl
-            << "    -t, --text\t\t\tCSV text file" << std::endl
-            << "    -l, --lang\t\t\tCSV language file" << std::endl
-            << "    -o, --out\t\t\tCSV output file" << std::endl
-            << "    -a, --algo\t\t\tAlgorithm id to be performed on the text" << std::endl
-            << "    -h, --help\t\t\tDisplay this help message" << std::endl;
+            << "    -t, --text\t\tCSV text file" << std::endl
+            << "    -l, --lang\t\tCSV language file" << std::endl
+            << "    -o, --out\t\tCSV output file" << std::endl
+            << "    -a, --algo\t\tAlgorithm id to be performed on the text" << std::endl
+            << "        \t\t* space: Add space between word characters" << std::endl
+            << "    -h, --help\t\tDisplay this help message" << std::endl;
 }
 
 /**
