@@ -1,5 +1,7 @@
 project(csv2csv)
-set(NGRAM_EXEC ${PROJECT_NAME})
 
 # Add ngram exectuable
-add_executable(${NGRAM_EXEC} src/csv2csv.cpp)
+add_executable(${PROJECT_NAME} src/csv2csv.cpp)
+
+# Add libraries
+target_link_libraries(${PROJECT_NAME} pthread)
