@@ -1,6 +1,6 @@
 project(csv2csv)
 
-# Add ngram exectuable
+# Add exectuable
 add_executable(${PROJECT_NAME} src/csv2csv.cpp)
 
 # Add libraries

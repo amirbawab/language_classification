@@ -12,3 +12,4 @@ add_compile_options(-std=c++11)
 
 # Add sub-project
 add_subdirectory(csv2csv)
+add_subdirectory(naivebayes)
