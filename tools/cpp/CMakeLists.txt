@@ -10,8 +10,5 @@ include_directories(thirdparty/csv)
 # Compile with -std=c++11
 add_compile_options(-std=c++11)
 
-# Add thirdparty projects
-#add_subdirectory(thirdparty/pugixml)
-
 # Add sub-project
-#add_subdirectory(ngram)
+add_subdirectory(csv2csv)
