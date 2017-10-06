@@ -9,6 +9,31 @@
             "location": "/#welcome-to-language-classification",
             "text": "",
             "title": "Welcome to Language Classification"
+        },
+        {
+            "location": "/csv2csv/",
+            "text": "CSV2CSV\n\n\nBuild tool\n\n\ncd $REPO/tools/cpp/\ncmake .\nmake csv2csv\n\n\n\n\nUsage\n\n\nUse the \n-h\n flag to learn more about the options csv2csv provides\n\n\ncsv2csv -h\n\n\n\n\nExample\n\n\ncsv2csv -t text.csv -l lang.csv -o output.csv",
+            "title": "CSV2CSV"
+        },
+        {
+            "location": "/csv2csv/#csv2csv",
+            "text": "",
+            "title": "CSV2CSV"
+        },
+        {
+            "location": "/csv2csv/#build-tool",
+            "text": "cd $REPO/tools/cpp/\ncmake .\nmake csv2csv",
+            "title": "Build tool"
+        },
+        {
+            "location": "/csv2csv/#usage",
+            "text": "Use the  -h  flag to learn more about the options csv2csv provides  csv2csv -h",
+            "title": "Usage"
+        },
+        {
+            "location": "/csv2csv/#example",
+            "text": "csv2csv -t text.csv -l lang.csv -o output.csv",
+            "title": "Example"
         }
     ]
 }
