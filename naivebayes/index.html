@@ -8,7 +8,7 @@
   
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>CSV2CSV - Language Classification</title>
+  <title>Naive Bayes - Language Classification</title>
   <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
 
   <link rel="stylesheet" href="../css/theme.css" type="text/css" />
@@ -17,9 +17,9 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "CSV2CSV";
-    var mkdocs_page_input_path = "csv2csv.md";
-    var mkdocs_page_url = "/csv2csv/";
+    var mkdocs_page_name = "Naive Bayes";
+    var mkdocs_page_input_path = "naivebayes.md";
+    var mkdocs_page_url = "/naivebayes/";
   </script>
   
   <script src="../js/jquery-2.1.1.min.js"></script>
@@ -52,12 +52,17 @@
     <a class="" href="..">Home</a>
 	    </li>
           
+            <li class="toctree-l1">
+		
+    <a class="" href="../csv2csv/">CSV2CSV</a>
+	    </li>
+          
             <li class="toctree-l1 current">
 		
-    <a class="current" href="./">CSV2CSV</a>
+    <a class="current" href="./">Naive Bayes</a>
     <ul class="subnav">
             
-    <li class="toctree-l2"><a href="#csv2csv">CSV2CSV</a></li>
+    <li class="toctree-l2"><a href="#text-classification-using-naive-bayes">Text Classification using Naive Bayes</a></li>
     
         <ul>
         
@@ -69,11 +74,6 @@
     
 
     </ul>
-	    </li>
-          
-            <li class="toctree-l1">
-		
-    <a class="" href="../naivebayes/">Naive Bayes</a>
 	    </li>
           
         </ul>
@@ -98,10 +98,10 @@
     
       
     
-    <li>CSV2CSV</li>
+    <li>Naive Bayes</li>
     <li class="wy-breadcrumbs-aside">
       
-        <a href="https://github.com/sunyam/Language_Classification/edit/master/docs/csv2csv.md"
+        <a href="https://github.com/sunyam/Language_Classification/edit/master/docs/naivebayes.md"
           class="icon icon-github"> Edit on GitHub</a>
       
     </li>
@@ -111,20 +111,32 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="csv2csv">CSV2CSV</h1>
+                <h1 id="text-classification-using-naive-bayes">Text Classification using Naive Bayes</h1>
 <h2 id="build-tool">Build tool</h2>
 <pre><code>cd $REPO/tools/cpp/
 cmake .
-make csv2csv
+make naivebayes
 </code></pre>
 
 <h2 id="usage">Usage</h2>
-<p>Use the <code>-h</code> flag to learn more about the options csv2csv provides</p>
-<pre><code>csv2csv -h
+<p>Use the <code>-h</code> flag to learn more about the options <code>naivebayes</code> provides</p>
+<pre><code>naivebayes -h
 </code></pre>
 
-<h3 id="example">Example</h3>
-<pre><code>csv2csv -t text.csv -l lang.csv -o output.csv
+<p><strong>NOTE: Use the <a href="../csv2csv">csv2csv</a> tool to generate a valid csv input file</strong></p>
+<h3 id="example-1">Example 1</h3>
+<p>Load input training set and evaluate a sentence</p>
+<pre><code>./naivebayes -i input.csv -s &quot;bonjour à tous&quot;
+</code></pre>
+
+<h3 id="example-2">Example 2</h3>
+<p>Cache the compute Naive Bayes probabilities to a csv file</p>
+<pre><code>./naivebayes -i input.csv -c cache.csv
+</code></pre>
+
+<h3 id="example-3">Example 3</h3>
+<p>Load cached probabilities from file and evaluate a sentence</p>
+<pre><code>./naivebayes -l cache.csv -s &quot;bonjour à tous&quot;
 </code></pre>
               
             </div>
@@ -133,10 +145,8 @@ make csv2csv
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../naivebayes/" class="btn btn-neutral float-right" title="Naive Bayes">Next <span class="icon icon-circle-arrow-right"></span></a>
       
-      
-        <a href=".." class="btn btn-neutral" title="Home"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../csv2csv/" class="btn btn-neutral" title="CSV2CSV"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
@@ -164,10 +174,8 @@ make csv2csv
           <a href="https://github.com/sunyam/Language_Classification" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
       
       
-        <span><a href=".." style="color: #fcfcfc;">&laquo; Previous</a></span>
+        <span><a href="../csv2csv/" style="color: #fcfcfc;">&laquo; Previous</a></span>
       
-      
-        <span style="margin-left: 15px"><a href="../naivebayes/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>

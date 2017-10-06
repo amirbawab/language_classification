@@ -34,6 +34,41 @@
             "location": "/csv2csv/#example",
             "text": "csv2csv -t text.csv -l lang.csv -o output.csv",
             "title": "Example"
+        },
+        {
+            "location": "/naivebayes/",
+            "text": "Text Classification using Naive Bayes\n\n\nBuild tool\n\n\ncd $REPO/tools/cpp/\ncmake .\nmake naivebayes\n\n\n\n\nUsage\n\n\nUse the \n-h\n flag to learn more about the options \nnaivebayes\n provides\n\n\nnaivebayes -h\n\n\n\n\nNOTE: Use the \ncsv2csv\n tool to generate a valid csv input file\n\n\nExample 1\n\n\nLoad input training set and evaluate a sentence\n\n\n./naivebayes -i input.csv -s \"bonjour \u00e0 tous\"\n\n\n\n\nExample 2\n\n\nCache the compute Naive Bayes probabilities to a csv file\n\n\n./naivebayes -i input.csv -c cache.csv\n\n\n\n\nExample 3\n\n\nLoad cached probabilities from file and evaluate a sentence\n\n\n./naivebayes -l cache.csv -s \"bonjour \u00e0 tous\"",
+            "title": "Naive Bayes"
+        },
+        {
+            "location": "/naivebayes/#text-classification-using-naive-bayes",
+            "text": "",
+            "title": "Text Classification using Naive Bayes"
+        },
+        {
+            "location": "/naivebayes/#build-tool",
+            "text": "cd $REPO/tools/cpp/\ncmake .\nmake naivebayes",
+            "title": "Build tool"
+        },
+        {
+            "location": "/naivebayes/#usage",
+            "text": "Use the  -h  flag to learn more about the options  naivebayes  provides  naivebayes -h  NOTE: Use the  csv2csv  tool to generate a valid csv input file",
+            "title": "Usage"
+        },
+        {
+            "location": "/naivebayes/#example-1",
+            "text": "Load input training set and evaluate a sentence  ./naivebayes -i input.csv -s \"bonjour \u00e0 tous\"",
+            "title": "Example 1"
+        },
+        {
+            "location": "/naivebayes/#example-2",
+            "text": "Cache the compute Naive Bayes probabilities to a csv file  ./naivebayes -i input.csv -c cache.csv",
+            "title": "Example 2"
+        },
+        {
+            "location": "/naivebayes/#example-3",
+            "text": "Load cached probabilities from file and evaluate a sentence  ./naivebayes -l cache.csv -s \"bonjour \u00e0 tous\"",
+            "title": "Example 3"
         }
     ]
 }
