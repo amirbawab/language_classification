@@ -4,3 +4,4 @@ theme: 'readthedocs'
 pages:
     - 'Home': 'index.md'
     - 'CSV2CSV': 'csv2csv.md'
+    - 'Naive Bayes': 'naivebayes.md'
