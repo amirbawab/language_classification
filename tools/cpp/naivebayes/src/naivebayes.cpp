@@ -11,7 +11,6 @@
 
 // Global vars
 std::string g_inputFile;
-std::string g_outputFile;
 std::string g_cacheFile;
 std::string g_loadCacheFile;
 std::string g_sentence;
@@ -30,7 +29,6 @@ void printUsage() {
             << "    -i, --input     CSV input file" << std::endl
             << "    -c, --cache     Cache calculated probabilities to a file" << std::endl
             << "    -l, --loadcache Load cache probabilities from file" << std::endl
-            << "    -o, --output    Output file" << std::endl
             << "    -s, --sentence  Sentence to evaluate" << std::endl
             << "    -h, --help      Display this help message" << std::endl;
 }
@@ -44,7 +42,6 @@ void initParams(int argc, char *argv[]) {
 
     struct option longOptions[] = {
             {"input", required_argument, 0, 'i'},
-            {"output", required_argument, 0, 'o'},
             {"cache", required_argument, 0, 'c'},
             {"loadcache", required_argument, 0, 'l'},
             {"sentence", required_argument, 0, 's'},
@@ -54,13 +51,10 @@ void initParams(int argc, char *argv[]) {
 
     int optionIndex = 0;
     int c;
-    while ((c = getopt_long(argc, argv, "hi:o:c:l:s:", longOptions, &optionIndex)) != -1) {
+    while ((c = getopt_long(argc, argv, "hi:c:l:s:", longOptions, &optionIndex)) != -1) {
         switch (c) {
             case 'i':
                 g_inputFile = optarg;
-                break;
-            case 'o':
-                g_outputFile = optarg;
                 break;
             case 'c':
                 g_cacheFile = optarg;
@@ -103,7 +97,7 @@ int main(int argc, char** argv) {
     initParams(argc, argv);
 
     // Handle errors
-    if((g_loadCacheFile.empty() && g_inputFile.empty()) || g_outputFile.empty()) {
+    if(g_loadCacheFile.empty() && g_inputFile.empty()) {
         printUsage();
         return 0;
     }
