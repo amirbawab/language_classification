@@ -95,10 +95,10 @@ void applyAlgorithm(std::string algoId, std::map<int, struct utt*> &map) {
             entry.second->m_text.clear();
             std::stringstream ss;
             for (int index = 0; index < orgText.length(); index++) {
-                ss << orgText[index];
-                if (orgText[index] != ' ') {
+                if(index > 0 && (orgText[index] >= 0 || orgText[index-1] >= 0) && orgText[index] != ' ') {
                     ss << " ";
                 }
+                ss << orgText[index];
             }
             entry.second->m_text = ss.str();
         }
