@@ -17,6 +17,7 @@ std::vector<std::string> g_algorithms;
 
 // Algorithms
 const std::string ALGO_SPACE = "space";
+const std::string ALGO_LOWER = "lower";
 
 /**
  * Print program usage to stdout
@@ -25,12 +26,13 @@ void printUsage() {
     std::cout
             << "csv2csv - Merge two csv files into one" << std::endl << std::endl
             << "Usage: csv2csv [-t text.csv] [-l lang.csv] [-o output.csv]" << std::endl
-            << "    -t, --text\t\tCSV text file" << std::endl
-            << "    -l, --lang\t\tCSV language file" << std::endl
-            << "    -o, --out\t\tCSV output file" << std::endl
-            << "    -a, --algo\t\tAlgorithm id to be performed on the text" << std::endl
-            << "        \t\t* space: Add space between word characters" << std::endl
-            << "    -h, --help\t\tDisplay this help message" << std::endl;
+            << "    -t, --text   CSV text file" << std::endl
+            << "    -l, --lang   CSV language file" << std::endl
+            << "    -o, --out    CSV output file" << std::endl
+            << "    -a, --algo   Algorithm id to be performed on the text" << std::endl
+            << "                 * space: Add space between characters in text" << std::endl
+            << "                 * lower: Convert text to lower case" << std::endl
+            << "    -h, --help   Display this help message" << std::endl;
 }
 
 /**
@@ -88,17 +90,22 @@ struct utt {
  */
 void applyAlgorithm(std::string algoId, std::map<int, struct utt*> &map) {
     if(algoId == ALGO_SPACE) {
-        for(auto entry : map) {
+        for (auto entry : map) {
             std::string orgText = entry.second->m_text;
             entry.second->m_text.clear();
             std::stringstream ss;
-            for(int index=0; index < orgText.length(); index++) {
+            for (int index = 0; index < orgText.length(); index++) {
                 ss << orgText[index];
-                if(orgText[index] != ' ') {
+                if (orgText[index] != ' ') {
                     ss << " ";
                 }
             }
             entry.second->m_text = ss.str();
+        }
+    } else if(algoId == ALGO_LOWER) {
+        for(auto entry : map) {
+            std::transform(entry.second->m_text.begin(), entry.second->m_text.end(),
+                           entry.second->m_text.begin(), ::tolower);
         }
     } else {
         std::cerr << "Algorithm ID: " << algoId << " was not found." << std::endl;
