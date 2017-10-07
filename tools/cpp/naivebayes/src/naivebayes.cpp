@@ -14,6 +14,8 @@ std::string g_inputFile;
 std::string g_cacheFile;
 std::string g_loadCacheFile;
 std::string g_sentence;
+std::string g_testFile;
+std::string g_outputFile;
 
 // Cache types
 const std::string CACHE_WORD = "word";
@@ -30,6 +32,8 @@ void printUsage() {
             << "    -c, --cache     Cache calculated probabilities to a file" << std::endl
             << "    -l, --loadcache Load cache probabilities from file" << std::endl
             << "    -s, --sentence  Sentence to evaluate" << std::endl
+            << "    -t, --test      Load test sentences from CSV file" << std::endl
+            << "    -o, --out       Output test result to CSV file" << std::endl
             << "    -h, --help      Display this help message" << std::endl;
 }
 
@@ -45,13 +49,15 @@ void initParams(int argc, char *argv[]) {
             {"cache", required_argument, 0, 'c'},
             {"loadcache", required_argument, 0, 'l'},
             {"sentence", required_argument, 0, 's'},
+            {"test", required_argument, 0, 't'},
+            {"out", required_argument, 0, 'o'},
             {"help",   no_argument,       0, 'h'},
             {0, 0,                        0, 0}
     };
 
     int optionIndex = 0;
     int c;
-    while ((c = getopt_long(argc, argv, "hi:c:l:s:", longOptions, &optionIndex)) != -1) {
+    while ((c = getopt_long(argc, argv, "hi:c:l:s:o:t:", longOptions, &optionIndex)) != -1) {
         switch (c) {
             case 'i':
                 g_inputFile = optarg;
@@ -64,6 +70,12 @@ void initParams(int argc, char *argv[]) {
                 break;
             case 's':
                 g_sentence = optarg;
+                break;
+            case 'o':
+                g_outputFile = optarg;
+                break;
+            case 't':
+                g_testFile = optarg;
                 break;
             case 'h':
             default:
@@ -91,13 +103,40 @@ std::vector<std::string> tokenize(std::string text) {
     return tokens;
 }
 
+/**
+ * Get the category of a text based on the Naive Bayes probabilities
+ * @param text
+ * @param pCategory
+ * @param pWordGivenCategory
+ * @return category id: {0: Slovak, 1: French, 2: Spanish, 3: German, 4: Polish}
+ */
+int getCategory(std::string text, std::map<int, double> &pCategory,
+                std::map<std::string, std::map<int, double>> &pWordGivenCategory) {
+    std::vector<std::string> tokens = tokenize(text);
+    double max = 0;
+    int category = -1;
+    for(auto entry : pCategory) {
+        double val = entry.second;
+        for(std::string token : tokens) {
+            if(pWordGivenCategory.find(token) != pWordGivenCategory.end()) {
+                val *= pWordGivenCategory[token][entry.first];
+            }
+        }
+        if(val > max) {
+            max = val;
+            category = entry.first;
+        }
+    }
+    return category;
+}
+
 int main(int argc, char** argv) {
 
     // Initialize parameters
     initParams(argc, argv);
 
     // Handle errors
-    if(g_loadCacheFile.empty() && g_inputFile.empty()) {
+    if(g_loadCacheFile.empty() && g_inputFile.empty() || g_outputFile.empty()) {
         printUsage();
         return 0;
     }
@@ -149,8 +188,8 @@ int main(int argc, char** argv) {
             for(auto &wordEntry : wordGivenCategoryCounter) {
                 for(auto &categoryEntry : categoryCounter) {
                     pWordGivenCategory[wordEntry.first][categoryEntry.first] = (double)
-                                                                                       (BIAS +  wordGivenCategoryCounter[wordEntry.first][categoryEntry.first]) /
-                                                                               (wordsInCategoryCounter[categoryEntry.first] + wordGivenCategoryCounter.size());
+                           (BIAS +  wordGivenCategoryCounter[wordEntry.first][categoryEntry.first]) /
+                           (wordsInCategoryCounter[categoryEntry.first] + wordGivenCategoryCounter.size());
                 }
             }
 
@@ -208,20 +247,36 @@ int main(int argc, char** argv) {
         }
 
         // Evaluate a sentence
+        std::stringstream result;
+        result << "Id,Category" << std::endl;
         if(!g_sentence.empty()) {
             std::cout << ">> Evaluating sentence: " << g_sentence << std::endl;
+            result << "-1," << getCategory(g_sentence, pCategory, pWordGivenCategory) << std::endl;
+        } else if(!g_testFile.empty()) {
+            std::cout << ">> Evaluating test file: " << g_testFile << std::endl;
 
-            // Convert sentence to tokens
-            std::vector<std::string> tokens = tokenize(g_sentence);
-            for(auto entry : pCategory) {
-                double val = entry.second;
-                for(std::string token : tokens) {
-                    if(pWordGivenCategory.find(token) != pWordGivenCategory.end()) {
-                        val *= pWordGivenCategory[token][entry.first];
-                    }
-                }
-                std::cout << "P(S | " << entry.first << ") = " << val << std::endl;
+            // Prepare variables
+            int id;
+            std::string text;
+
+            // Read csv
+            io::CSVReader<2> cacheCSV(g_testFile);
+            cacheCSV.read_header(io::ignore_extra_column, "Id", "Text");
+            while(cacheCSV.read_row(id, text)) {
+                result << id << "," << getCategory(text, pCategory, pWordGivenCategory) << std::endl;
             }
+        }
+
+        if(g_outputFile == "--") {
+            std::cout << result.str() << std::endl;
+        } else {
+            std::ofstream outFile(g_outputFile);
+            if(!outFile.is_open()) {
+                std::cerr << "Could not open output file" << std::endl;
+                return 1;
+            }
+            outFile << result.str() << std::endl;
+            outFile.close();
         }
 
     } catch (io::error::can_not_open_file exception) {
