@@ -87,8 +87,8 @@ struct utt {
  * @param map
  */
 void applyAlgorithm(std::string algoId, std::map<int, struct utt*> &map) {
-    for(auto entry : map) {
-        if(algoId == ALGO_SPACE) {
+    if(algoId == ALGO_SPACE) {
+        for(auto entry : map) {
             std::string orgText = entry.second->m_text;
             entry.second->m_text.clear();
             std::stringstream ss;
@@ -99,10 +99,9 @@ void applyAlgorithm(std::string algoId, std::map<int, struct utt*> &map) {
                 }
             }
             entry.second->m_text = ss.str();
-        } else {
-            std::cerr << "Algorithm ID: " << algoId << " was not found." << std::endl;
-            return;
         }
+    } else {
+        std::cerr << "Algorithm ID: " << algoId << " was not found." << std::endl;
     }
 }
 
