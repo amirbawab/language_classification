@@ -49,11 +49,26 @@ class CLI:
                     # Update objects
                     entries[id]['category'] = category
 
+        # Apply algorithms
+        if args.algo is not None:
+            for algo in args.algo:
+                print(">> Applying algorithm:",algo)
+                if algo == "space":
+                    for entry in entries:
+                        # Remove whitespace
+                        entries[entry]['text'] = "".join(entries[entry]['text'].split())
+                        # Add whitespace
+                        entries[entry]['text'] = entries[entry]['text'].replace(""," ")
+                elif algo == "lower":
+                    for entry in entries:
+                        entries[entry]['text'] = entries[entry]['text'].lower()
+                else:
+                    print(">> Algorithm:",algo,"not found!")
         # Prepare output
         if args.out is not None:
             print(">> Generating CSV:", args.out[0])
             outputFile = open(args.out[0], 'w')
-            outputFile.write("Id,Category,Text");
+            outputFile.write("Id,Category,Text\n")
             for entry in entries:
                 outputFile.write("{},{},{}\n".format(entries[entry]['id'], entries[entry]['category'], 
                     entries[entry]['text']));
