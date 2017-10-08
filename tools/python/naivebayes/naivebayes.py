@@ -137,10 +137,11 @@ class NaiveBayes:
 
             # Compute probabilities
             for category in self.m_categoryCounter:
+                nominator = 0
                 if category in self.m_wordGivenCategoryCounter[word]:
-                    self.m_pWordGivenCategory[word][category] = \
-                            (BIAS +  self.m_wordGivenCategoryCounter[word][category]) / \
-                            (self.m_wordsInCategoryCounter[category] + len(self.m_wordGivenCategoryCounter))
+                    nominator = self.m_wordGivenCategoryCounter[word][category]
+                self.m_pWordGivenCategory[word][category] = (BIAS + nominator) / \
+                        (self.m_wordsInCategoryCounter[category] + len(self.m_wordGivenCategoryCounter))
 
         print(">> Computing P(Cj)")
         for category in self.m_categoryCounter:
