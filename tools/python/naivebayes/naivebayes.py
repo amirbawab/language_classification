@@ -28,8 +28,11 @@ class CLI:
             print(">> Loading:", args.input[0])
             with open(args.input[0], newline='', encoding='utf-8') as csvfile:
                 reader = csv.DictReader(csvfile)
-                naiveBayes.m_totalUtt = len(reader)
+                naiveBayes.m_totalUtt = 0
                 for row in reader:
+                    # Increment total utt
+                    naiveBayes.m_totalUtt += 1
+
                     # Load attributes
                     id = row['Id']
                     category = row['Category']
@@ -68,6 +71,45 @@ class CLI:
             # Compute probabilities
             naiveBayes.compute()
 
+        # Load cached probabilities
+        if args.loadcache is not None:
+            print(">> Loading probabilities from cache:", args.loadcache[0])
+            with open(args.loadcache[0], newline='', encoding='utf-8') as csvfile:
+                reader = csv.DictReader(csvfile)
+                for row in reader:
+                    
+                    # CSV attribute
+                    word = row['Word']
+                    category = row['Category']
+                    probability = row['Probability']
+                    type = row['Type']
+                    
+                    # Load probability
+                    if type == "word":
+                        if word not in naiveBayes.m_pWordGivenCategory:
+                            naiveBayes.m_pWordGivenCategory[word] = {}
+                        naiveBayes.m_pWordGivenCategory[word][category] = probability
+                    elif type == "category":
+                        naiveBayes.m_pCategory[category] = probability
+
+            
+
+        # Cache probabilities
+        if args.cache is not None:
+            print(">> Caching computed probabilities at:", args.cache[0])
+            cacheFile = open(args.cache[0], 'w')
+            cacheFile.write("Word,Category,Probability,Type\n")
+
+            # Write probability of categories
+            for category in naiveBayes.m_pCategory:
+                cacheFile.write(",{},{},category\n".format(category, naiveBayes.m_pCategory[category]))
+
+            # Write probability of words
+            for word in naiveBayes.m_pWordGivenCategory:
+                for category in naiveBayes.m_pWordGivenCategory[word]:
+                    cacheFile.write("{},{},{},word\n".format(word, category, naiveBayes.m_pWordGivenCategory[word][category]))
+            cacheFile.close()
+
 class NaiveBayes:
     def __init__(self):
         """Initialize naive bayes variables"""
@@ -98,8 +140,11 @@ class NaiveBayes:
                 if category in self.m_wordGivenCategoryCounter[word]:
                     self.m_pWordGivenCategory[word][category] = \
                             (BIAS +  self.m_wordGivenCategoryCounter[word][category]) / \
-                            (self.m_wordsInCategoryCounter[category] + wordGivenCategoryCounter.size())
+                            (self.m_wordsInCategoryCounter[category] + len(self.m_wordGivenCategoryCounter))
 
+        print(">> Computing P(Cj)")
+        for category in self.m_categoryCounter:
+            self.m_pCategory[category] = self.m_categoryCounter[category] / self.m_totalUtt
 
 # Stat application
 cli = CLI()
