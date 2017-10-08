@@ -88,11 +88,9 @@ class CLI:
                     if type == "word":
                         if word not in naiveBayes.m_pWordGivenCategory:
                             naiveBayes.m_pWordGivenCategory[word] = {}
-                        naiveBayes.m_pWordGivenCategory[word][category] = probability
+                        naiveBayes.m_pWordGivenCategory[word][category] = float(probability)
                     elif type == "category":
-                        naiveBayes.m_pCategory[category] = probability
-
-            
+                        naiveBayes.m_pCategory[category] = float(probability)
 
         # Cache probabilities
         if args.cache is not None:
@@ -110,6 +108,37 @@ class CLI:
                     cacheFile.write("{},{},{},word\n".format(word, category, naiveBayes.m_pWordGivenCategory[word][category]))
             cacheFile.close()
 
+        # Prepare output
+        output = "Id,Category\n"
+
+        # Evaluate sentence
+        if args.sentence is not None:
+            print(">> Evaluating sentence:", args.sentence[0])
+            output += "-1,{}\n".format(naiveBayes.getCategory(args.sentence[0]))
+
+        elif args.test is not None:
+            print(">> Evaluating test file:", args.test[0])
+            with open(args.test[0], newline='', encoding='utf-8') as csvfile:
+                reader = csv.DictReader(csvfile)
+                for row in reader:
+
+                    # Read csv attributes
+                    id = row['Id']
+                    text = row['Text']
+                    
+                    # Add output to csv
+                    output += "{},{}\n".format(id, naiveBayes.getCategory(text))
+
+        # Process output
+        if args.out[0] == "__":
+            print(">> Printing output to stdout")
+            print(output)
+        else:
+            print(">> Saving output to:",args.out[0])
+            outputFile = open(args.out[0], 'w')
+            outputFile.write(output)
+            outputFile.close()
+
 class NaiveBayes:
     def __init__(self):
         """Initialize naive bayes variables"""
@@ -123,6 +152,22 @@ class NaiveBayes:
         # Store probabilities
         self.m_pWordGivenCategory = {}
         self.m_pCategory = {}
+
+    def getCategory(self, text):
+        """Conclude category from the probabilities"""
+
+        tokens = text.split()
+        result = -1
+        max = -1
+        for category in self.m_pCategory:
+            val = self.m_pCategory[category]
+            for token in tokens:
+                if token in self.m_pWordGivenCategory:
+                    val *= self.m_pWordGivenCategory[token][category]
+            if val >= max:
+                max = val
+                result = category
+        return result
 
     def compute(self):
         """Compute probabilities"""
