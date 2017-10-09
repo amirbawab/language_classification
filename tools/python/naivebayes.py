@@ -14,7 +14,7 @@ class CLI:
         parser.add_argument('-t','--test', nargs=1, help='Load test sentences from CSV file')
         parser.add_argument('-v','--verify', nargs=1, help='File with the correct values for the test')
         parser.add_argument('-o','--out', nargs=1, help='Output test result to CSV file or -- for stdout')
-        parser.add_argument('-f','--frequency', action='store_true', help='Show word frequency')
+        parser.add_argument('-f','--frequency', nargs=1, help='Show word frequency')
         args = parser.parse_args()
 
         # Create a naive bayes instance
@@ -73,12 +73,13 @@ class CLI:
             # Compute probabilities
             naiveBayes.compute()
 
-        if args.frequency is True and args.input is not None:
+        # Print word frequency
+        if args.frequency is not None and args.input is not None:
             # Show stats
-            print(">> Printing word frequency to stdout")
+            print(">> Printing word frequency of words occurring in {} category to stdout".format(args.frequency[0]))
             debug = []
             for w in naiveBayes.m_wordGivenCategoryCounter:
-                if len(naiveBayes.m_wordGivenCategoryCounter[w]) == 1:
+                if len(naiveBayes.m_wordGivenCategoryCounter[w]) == int(args.frequency[0]):
                     for c in naiveBayes.m_wordGivenCategoryCounter[w]:
                         debug.append({'word': w, 'count': naiveBayes.m_wordGivenCategoryCounter[w][c], 'category':c})
             debug.sort(key=lambda x: x['count'], reverse=True)
@@ -189,6 +190,15 @@ class NaiveBayes:
         self.m_pWordGivenCategory = {}
         self.m_pCategory = {}
 
+        # Category map
+        self.m_categoryMap = {}
+        # self.m_categoryMap["ę"] = 4
+        # self.m_categoryMap["ł"] = 4
+        # self.m_categoryMap["ś"] = 4
+        # self.m_categoryMap["ą"] = 4
+        # self.m_categoryMap["ž"] = 0
+        # self.m_categoryMap["č"] = 0
+
     def getCategory(self, text):
         """Conclude category from the probabilities"""
 
@@ -198,6 +208,8 @@ class NaiveBayes:
         for category in self.m_pCategory:
             val = self.m_pCategory[category]
             for token in tokens:
+                if token in self.m_categoryMap:
+                    return self.m_categoryMap[token]
                 if token in self.m_pWordGivenCategory:
                     val *= self.m_pWordGivenCategory[token][category]
             if val >= max:
