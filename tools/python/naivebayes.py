@@ -14,6 +14,7 @@ class CLI:
         parser.add_argument('-t','--test', nargs=1, help='Load test sentences from CSV file')
         parser.add_argument('-v','--verify', nargs=1, help='File with the correct values for the test')
         parser.add_argument('-o','--out', nargs=1, help='Output test result to CSV file or -- for stdout')
+        parser.add_argument('-f','--frequency', action='store_true', help='Show word frequency')
         args = parser.parse_args()
 
         # Create a naive bayes instance
@@ -71,6 +72,18 @@ class CLI:
             
             # Compute probabilities
             naiveBayes.compute()
+
+        if args.frequency is True and args.input is not None:
+            # Show stats
+            print(">> Printing word frequency to stdout")
+            debug = []
+            for w in naiveBayes.m_wordGivenCategoryCounter:
+                if len(naiveBayes.m_wordGivenCategoryCounter[w]) == 1:
+                    for c in naiveBayes.m_wordGivenCategoryCounter[w]:
+                        debug.append({'word': w, 'count': naiveBayes.m_wordGivenCategoryCounter[w][c], 'category':c})
+            debug.sort(key=lambda x: x['count'], reverse=True)
+            for object in debug:
+                print("Word {} orrcurs {} in {}".format(object['word'], object['count'], object['category']))
 
         # Load cached probabilities
         if args.loadcache is not None:
