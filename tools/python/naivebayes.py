@@ -192,12 +192,18 @@ class NaiveBayes:
 
         # Category map
         self.m_categoryMap = {}
-        # self.m_categoryMap["ę"] = 4
-        # self.m_categoryMap["ł"] = 4
-        # self.m_categoryMap["ś"] = 4
-        # self.m_categoryMap["ą"] = 4
-        # self.m_categoryMap["ž"] = 0
-        # self.m_categoryMap["č"] = 0
+        self.m_categoryMap["ę"] = '4'
+        self.m_categoryMap["ł"] = '4'
+        self.m_categoryMap["ś"] = '4'
+        self.m_categoryMap["ą"] = '4'
+        self.m_categoryMap["ž"] = '0'
+        self.m_categoryMap["č"] = '0'
+        self.m_categoryMap["ť"] = '0'
+        self.m_categoryMap["ý"] = '0'
+        self.m_categoryMap["ď"] = '0'
+        self.m_categoryMap["ź"] = '4'
+        self.m_categoryMap["ň"] = '0'
+        self.m_categoryMap["ğ"] = '2'
 
     def getCategory(self, text):
         """Conclude category from the probabilities"""
