@@ -12,6 +12,7 @@ class CLI:
         parser.add_argument('-l','--loadcache', nargs=1, help='Load cached probabilities from file')
         parser.add_argument('-s','--sentence', nargs=1, help='Sentence to evaluate')
         parser.add_argument('-t','--test', nargs=1, help='Load test sentences from CSV file')
+        parser.add_argument('-v','--verify', nargs=1, help='File with the correct values for the test')
         parser.add_argument('-o','--out', nargs=1, help='Output test result to CSV file or -- for stdout')
         args = parser.parse_args()
 
@@ -112,6 +113,7 @@ class CLI:
         output = "Id,Category\n"
 
         # Evaluate sentence
+        results = {}
         if args.sentence is not None:
             print(">> Evaluating sentence:", args.sentence[0])
             output += "-1,{}\n".format(naiveBayes.getCategory(args.sentence[0]))
@@ -127,18 +129,39 @@ class CLI:
                     text = row['Text']
                     
                     # Add output to csv
-                    output += "{},{}\n".format(id, naiveBayes.getCategory(text))
+                    predict = naiveBayes.getCategory(text)
+                    results[id] = predict
+                    output += "{},{}\n".format(id, predict)
 
         # Process output
-        if args.out[0] == "__":
-            print(">> Printing output to stdout")
-            print(output)
-        else:
-            print(">> Saving output to:",args.out[0])
-            outputFile = open(args.out[0], 'w')
-            outputFile.write(output)
-            outputFile.close()
+        if args.out is not None:
+            if args.out[0] == "__":
+                print(">> Printing output to stdout")
+                print(output)
+            else:
+                print(">> Saving output to:",args.out[0])
+                outputFile = open(args.out[0], 'w')
+                outputFile.write(output)
+                outputFile.close()
 
+        # Verify results
+        if args.verify is not None and args.test is not None:
+            print(">> Verifying test results against:", args.verify[0])
+            with open(args.verify[0], newline='', encoding='utf-8') as csvfile:
+                correct = 0
+                reader = csv.DictReader(csvfile)
+                for row in reader:
+                    # Read csv attributes
+                    id = row['Id']
+                    category = row['Category']
+
+                    if id not in results:
+                        print(">> Id {} not found".format(id))
+                    elif results[id] == category:
+                        correct+=1
+            print("Total: {}, Correct: {}, Accuracy: {}".format(
+                naiveBayes.m_totalUtt, correct, correct/naiveBayes.m_totalUtt))
+                    
 class NaiveBayes:
     def __init__(self):
         """Initialize naive bayes variables"""
