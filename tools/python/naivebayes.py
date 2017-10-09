@@ -145,7 +145,7 @@ class CLI:
                 outputFile.close()
 
         # Verify results
-        if args.verify is not None and args.test is not None:
+        if args.verify is not None and args.test is not None and args.input is not None:
             print(">> Verifying test results against:", args.verify[0])
             with open(args.verify[0], newline='', encoding='utf-8') as csvfile:
                 correct = 0
