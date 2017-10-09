@@ -1,4 +1,5 @@
 import argparse
+import random
 import csv
 
 class CLI:
@@ -55,13 +56,20 @@ class CLI:
                 print(">> Applying algorithm:",algo)
                 if algo == "space":
                     for entry in entries:
-                        # Remove whitespace
                         entries[entry]['text'] = "".join(entries[entry]['text'].split())
-                        # Add whitespace
                         entries[entry]['text'] = entries[entry]['text'].replace(""," ")
                 elif algo == "lower":
                     for entry in entries:
                         entries[entry]['text'] = entries[entry]['text'].lower()
+                elif algo == "shuffle":
+                    for entry in entries:
+                        splitTxt = entries[entry]['text'].split()
+                        random.shuffle(splitTxt)
+                        entries[entry]['text'] = " ".join(splitTxt)
+                elif algo.startswith("cut"):
+                    strlen = int(algo[3:])
+                    for entry in entries:
+                        entries[entry]['text'] = entries[entry]['text'][0:strlen]
                 else:
                     print(">> Algorithm:",algo,"not found!")
         # Prepare output
