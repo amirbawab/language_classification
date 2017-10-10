@@ -1,6 +1,7 @@
 import argparse
 import random
 import csv
+import os
 
 class CLI:
     def read(self):
@@ -11,11 +12,12 @@ class CLI:
         parser.add_argument('-t','--text', nargs=1, help='CSV text file')
         parser.add_argument('-l','--lang', nargs=1, help='CSV language file')
         parser.add_argument('-o','--out', nargs=1, help='CSV output file')
+        parser.add_argument('-O','--Out', nargs=1, help='CSV output files destination')
         parser.add_argument('-a','--algo', nargs='+', help='Algorithm id to be performed on the text')
         args = parser.parse_args()
 
         # Check for missing arguments
-        if args.text is None or args.lang is None or args.out is None:
+        if args.text is None or args.lang is None or (args.out is None and args.Out is None):
             print("Missing arguments")
             exit(1)
 
@@ -42,12 +44,8 @@ class CLI:
             with open(args.lang[0], newline='', encoding='utf-8') as csvfile:
                 reader = csv.DictReader(csvfile)
                 for row in reader:
-
-                    # Load attributes
                     id = row['Id']
                     category = row['Category']
-                    
-                    # Update objects
                     entries[id]['category'] = category
 
         # Apply algorithms
@@ -81,7 +79,15 @@ class CLI:
                 outputFile.write("{},{},{}\n".format(entries[entry]['id'], entries[entry]['category'], 
                     entries[entry]['text']));
             outputFile.close()
-
+        elif args.Out is not None:
+            print(">> Generating CSV files in directory:", args.Out[0])
+            for entry in entries:
+                filename = "{}/{}/{}".format(args.Out[0], entries[entry]['category'], entries[entry]['id'])
+                os.makedirs(os.path.dirname(filename), exist_ok=True)
+                outputFile  = open(filename,'w')
+                outputFile.write(entries[entry]['text'])
+                outputFile.close()
+            
 # Stat application
 cli = CLI()
 cli.read()
