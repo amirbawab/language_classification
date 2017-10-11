@@ -23,6 +23,7 @@ twenty_train = sklearn.datasets.load_files('/home/amirbawab/data/')
 print(">> Loading test data")
 docs_new = []
 with open('/home/amirbawab/training_text.csv', newline='', encoding='utf-8') as csvfile:
+#with open('/home/amirbawab/test_set_x.csv', newline='', encoding='utf-8') as csvfile:
      reader = csv.DictReader(csvfile)
      for row in reader:
          docs_new.append(row['Text'])
@@ -51,18 +52,26 @@ def pipeline(itr,alpha):
         c += 1
     outputFile.close()
 
-# New
-threads = []
-for itr in range(5,15,2):
-    for lalpha in range(1,10,3):
-        for ralpha in range(3,6):
-            alpha = float('{}e-{}'.format(lalpha, ralpha))
-            thread = Thread(target = pipeline, args = (itr,alpha,))
-            threads.append(thread)
-            thread.start()
+# Test multiple combinations
+def large():
+    threads = []
+    for itr in range(5,15,2):
+        for lalpha in range(1,10,3):
+            for ralpha in range(3,6):
+                alpha = float('{}e-{}'.format(lalpha, ralpha))
+                thread = Thread(target = pipeline, args = (itr,alpha,))
+                threads.append(thread)
+                thread.start()
 
-# Join threads
-for thread in threads:
-    thread.join()
+    # Join threads
+    for thread in threads:
+        thread.join()
+
+# Test single combination
+def single():
+    pipeline(7, 2e-5)
+
+# Run
+single()
 
 print(">> Done")
