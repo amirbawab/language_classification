@@ -10,20 +10,35 @@ class CLI:
         parser.add_argument('-i','--input', nargs=1, help='CSV input file')
         parser.add_argument('-c','--cache', nargs=1, help='Cache calculated probabilities to a file')
         parser.add_argument('-l','--loadcache', nargs=1, help='Load cached probabilities from file')
-        parser.add_argument('-s','--sentence', nargs=1, help='Sentence to evaluate')
         parser.add_argument('-t','--test', nargs=1, help='Load test sentences from CSV file')
-        parser.add_argument('-v','--verify', nargs=1, help='File with the correct values for the test')
         parser.add_argument('-o','--out', nargs=1, help='Output test result to CSV file or -- for stdout')
         parser.add_argument('-f','--frequency', nargs=1, help='Show word frequency')
+        parser.add_argument('-r','--ratio', nargs=1, 
+                help='e.g. ê occurs 1000 in FR and 1 in SP, then if 1/1000 < r, remove it from SP')
+        parser.add_argument('-s','--strict', action='store_true', 
+                help='If a character is only available in one category then guess this category')
         args = parser.parse_args()
 
         # Create a naive bayes instance
-        naiveBayes = NaiveBayes()
+        naiveBayes = NaiveBayes(args.strict)
+
+        # Ratio
+        ratio = 0
 
         # Checkfor missing arguments
-        if args.input is None and args.loadcache is None or args.out is None:
+        if args.input is None and args.loadcache is None:
             print("Missing arguments")
             exit(1)
+
+        # Update ratio
+        if args.ratio is not None:
+            ratio = float(args.ratio[0])
+
+        # Log some information
+        if ratio > 0:
+            print(">> Ratio value:",ratio)
+        if args.strict is True:
+            print(">> Strict mode enabled")
 
         # Load input csv
         if args.input is not None:
@@ -70,6 +85,10 @@ class CLI:
                     # Increment words in category
                     naiveBayes.m_wordsInCategoryCounter[category] += len(tokens)
             
+            # Filter counters using the ratio value
+            if ratio > 0:
+                naiveBayes.applyRatio(ratio)
+
             # Compute probabilities
             naiveBayes.compute()
 
@@ -126,13 +145,7 @@ class CLI:
         # Prepare output
         output = "Id,Category\n"
 
-        # Evaluate sentence
-        results = {}
-        if args.sentence is not None:
-            print(">> Evaluating sentence:", args.sentence[0])
-            output += "-1,{}\n".format(naiveBayes.getCategory(args.sentence[0]))
-
-        elif args.test is not None:
+        if args.test is not None:
             print(">> Evaluating test file:", args.test[0])
             with open(args.test[0], newline='', encoding='utf-8') as csvfile:
                 reader = csv.DictReader(csvfile)
@@ -144,7 +157,6 @@ class CLI:
                     
                     # Add output to csv
                     predict = naiveBayes.getCategory(text)
-                    results[id] = predict
                     output += "{},{}\n".format(id, predict)
 
         # Process output
@@ -158,52 +170,30 @@ class CLI:
                 outputFile.write(output)
                 outputFile.close()
 
-        # Verify results
-        if args.verify is not None and args.test is not None and args.input is not None:
-            print(">> Verifying test results against:", args.verify[0])
-            with open(args.verify[0], newline='', encoding='utf-8') as csvfile:
-                correct = 0
-                reader = csv.DictReader(csvfile)
-                for row in reader:
-                    # Read csv attributes
-                    id = row['Id']
-                    category = row['Category']
-
-                    if id not in results:
-                        print(">> Id {} not found".format(id))
-                    elif results[id] == category:
-                        correct+=1
-            print("Total: {}, Correct: {}, Accuracy: {}".format(
-                naiveBayes.m_totalUtt, correct, correct/naiveBayes.m_totalUtt))
-                    
 class NaiveBayes:
-    def __init__(self):
+    def __init__(self, strict):
         """Initialize naive bayes variables"""
         
-        # Store counts
+        # Set strict mode
+        self.m_strict = strict
+
+        # Total utterances
         self.m_totalUtt = 0
+
+        # Count the number of utterances in each category
         self.m_categoryCounter= {}
+
+        # Count the occurrence of a word in each category (e.g. var[word][cat])
         self.m_wordGivenCategoryCounter = {}
+
+        # Count the number of words in each category
         self.m_wordsInCategoryCounter = {}
 
-        # Store probabilities
+        # Store probability of a word given a category (e.g. var[word][cat])
         self.m_pWordGivenCategory = {}
-        self.m_pCategory = {}
 
-        # Category map
-        self.m_categoryMap = {}
-        self.m_categoryMap["ę"] = '4'
-        self.m_categoryMap["ł"] = '4'
-        self.m_categoryMap["ś"] = '4'
-        self.m_categoryMap["ą"] = '4'
-        self.m_categoryMap["ž"] = '0'
-        self.m_categoryMap["č"] = '0'
-        self.m_categoryMap["ť"] = '0'
-        self.m_categoryMap["ý"] = '0'
-        self.m_categoryMap["ď"] = '0'
-        self.m_categoryMap["ź"] = '4'
-        self.m_categoryMap["ň"] = '0'
-        self.m_categoryMap["ğ"] = '2'
+        # Store the probility of a category
+        self.m_pCategory = {}
 
     def getCategory(self, text):
         """Conclude category from the probabilities"""
@@ -214,14 +204,39 @@ class NaiveBayes:
         for category in self.m_pCategory:
             val = self.m_pCategory[category]
             for token in tokens:
-                if token in self.m_categoryMap:
-                    return self.m_categoryMap[token]
+                # If only one category, then return it
+                if self.m_strict is True and len(self.m_wordGivenCategoryCounter[token]) == 1:
+                    return list(self.m_wordGivenCategoryCounter[token].keys())[0]
+                # Otherwise, proceed with the production
                 if token in self.m_pWordGivenCategory:
                     val *= self.m_pWordGivenCategory[token][category]
+            # Argmax of production
             if val >= max:
                 max = val
                 result = category
         return result
+
+    def applyRatio(self, ratio):
+        """Apply ratio"""
+
+        for token in self.m_wordGivenCategoryCounter:
+            deleteCategories = set()
+            # Check if category1/category2 < ratio, then mark it to delete
+            for category1 in self.m_wordGivenCategoryCounter[token]:
+                for category2 in self.m_wordGivenCategoryCounter[token]:
+                    if category1 != category2 \
+                            and self.m_wordGivenCategoryCounter[token][category1] / \
+                            self.m_wordGivenCategoryCounter[token][category2] < ratio:
+                                deleteCategories.add(category1)
+            # Delete tokens in categories and update the number of words in category
+            if len(deleteCategories) > 0:
+                print(">>>> Word {} is currently in categories {}".format( 
+                        token, self.m_wordGivenCategoryCounter[token]))
+            for key in deleteCategories:
+                print(">>>>>> Removing word {} from category {}"
+                        .format(token, key, self.m_wordGivenCategoryCounter[token][key]))
+                self.m_wordsInCategoryCounter[key] -= self.m_wordGivenCategoryCounter[token][key]
+                self.m_wordGivenCategoryCounter[token].pop(key)
 
     def compute(self):
         """Compute probabilities"""
