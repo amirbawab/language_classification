@@ -205,8 +205,10 @@ class NaiveBayes:
             val = self.m_pCategory[category]
             for token in tokens:
                 # If only one category, then return it
-                if self.m_strict is True and len(self.m_wordGivenCategoryCounter[token]) == 1:
-                    return list(self.m_wordGivenCategoryCounter[token].keys())[0]
+                if token in self.m_wordGivenCategoryCounter \
+                        and self.m_strict is True \
+                        and len(self.m_wordGivenCategoryCounter[token]) == 1:
+                            return list(self.m_wordGivenCategoryCounter[token].keys())[0]
                 # Otherwise, proceed with the production
                 if token in self.m_pWordGivenCategory:
                     val *= self.m_pWordGivenCategory[token][category]
