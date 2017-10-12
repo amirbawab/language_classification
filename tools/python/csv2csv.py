@@ -22,7 +22,8 @@ class CLI:
             exit(1)
 
         # Prepare csv variables
-        entries = {}
+        tmpEntries = {}
+        entries_array = []
 
         # Load text csv
         if args.text is not None:
@@ -36,7 +37,8 @@ class CLI:
                     text = row['Text']
                     
                     # Add objects
-                    entries[id] = {"id":id, "text": text}
+                    tmpEntries[id] = {"id":id, "text": text}
+                    entries_array.append(tmpEntries[id])
 
         # Load lang csv
         if args.lang is not None:
@@ -46,34 +48,36 @@ class CLI:
                 for row in reader:
                     id = row['Id']
                     category = row['Category']
-                    entries[id]['category'] = category
+                    tmpEntries[id]['category'] = category
 
         # Apply algorithms
         if args.algo is not None:
             for algo in args.algo:
                 print(">> Applying algorithm:",algo)
                 if algo == "space":
-                    for entry in entries:
-                        entries[entry]['text'] = "".join(entries[entry]['text'].split())
-                        entries[entry]['text'] = entries[entry]['text'].replace(""," ")
+                    for entry in entries_array:
+                        entry['text'] = "".join(entry['text'].split())
+                        entry['text'] = entry['text'].replace(""," ")
                 elif algo == "no_space":
-                    for entry in entries:
-                        entries[entry]['text'] = "".join(entries[entry]['text'].split())
+                    for entry in entries_array:
+                        entry['text'] = "".join(entry['text'].split())
                 elif algo == "lower":
-                    for entry in entries:
-                        entries[entry]['text'] = entries[entry]['text'].lower()
+                    for entry in entries_array:
+                        entry['text'] = entry['text'].lower()
                 elif algo == "shuffle":
-                    for entry in entries:
-                        splitTxt = entries[entry]['text'].split()
+                    for entry in entries_array:
+                        splitTxt = entry['text'].split()
                         random.shuffle(splitTxt)
-                        entries[entry]['text'] = " ".join(splitTxt)
+                        entry['text'] = " ".join(splitTxt)
                 elif algo.startswith("cut"):
                     strlen = int(algo[3:])
-                    for entry in entries:
-                        entries[entry]['text'] = entries[entry]['text'][0:strlen]
+                    for entry in entries_array:
+                        entry['text'] = entry['text'][0:strlen]
                 elif algo == "sort_lex":
-                    for entry in entries:
-                        entries[entry]['text'] = "".join(sorted(entries[entry]['text'], key=str.lower))
+                    for entry in entries_array:
+                        entry['text'] = "".join(sorted(entry['text'], key=str.lower))
+                elif algo == 'sort_len':
+                    entries_array.sort(key=lambda x: len(x['text']))
                 else:
                     print(">> Algorithm:",algo,"not found!")
         # Prepare output
@@ -81,17 +85,17 @@ class CLI:
             print(">> Generating CSV:", args.out[0])
             outputFile = open(args.out[0], 'w')
             outputFile.write("Id,Category,Text\n")
-            for entry in entries:
-                outputFile.write("{},{},{}\n".format(entries[entry]['id'], entries[entry]['category'], 
-                    entries[entry]['text']));
+            for entry in entries_array:
+                outputFile.write("{},{},{}\n".format(entry['id'], entry['category'], 
+                    entry['text']))
             outputFile.close()
         elif args.Out is not None:
             print(">> Generating CSV files in directory:", args.Out[0])
-            for entry in entries:
-                filename = "{}/{}/{}".format(args.Out[0], entries[entry]['category'], entries[entry]['id'])
+            for entry in entries_array:
+                filename = "{}/{}/{}".format(args.Out[0], entry['category'], entry['id'])
                 os.makedirs(os.path.dirname(filename), exist_ok=True)
                 outputFile  = open(filename,'w')
-                outputFile.write(entries[entry]['text'])
+                outputFile.write(entry['text'])
                 outputFile.close()
             
 # Stat application
