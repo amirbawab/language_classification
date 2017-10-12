@@ -12,6 +12,7 @@ class KNN:
         self.test_vectors = {}
 
     def vectorize_training_data(self, textfile):
+        word_count_in_languages = {}
         with open(textfile, 'rb') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
@@ -23,6 +24,13 @@ class KNN:
                         self.languages[lang][word] += 1
                     else:
                         self.languages[lang][word] = 1
+                    if word_count_in_languages.has_key(lang):
+                        word_count_in_languages[lang] += 1
+                    else:
+                        word_count_in_languages[lang] = 1
+            for lang in self.languages.keys():
+                for word, freq in self.languages[lang].iteritems():
+                    self.languages[lang][word] = float(self.languages[lang][word]) / float(word_count_in_languages[lang])
 
     def vectorize_test(self, testfile):
         with open(testfile, 'rb') as csvfile:
@@ -35,6 +43,8 @@ class KNN:
                         self.test_vectors[i][word] += 1
                     else:
                         self.test_vectors[i][word] = 1
+                for word in nltk.word_tokenize(row['Text']):
+                    self.test_vectors[i][word] = float(self.test_vectors[i][word]) / float(sum(self.test_vectors[i].values()))
                 i += 1
 
     def predict(self, outfile):
