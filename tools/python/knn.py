@@ -7,7 +7,8 @@ import argparse
 class KNN:
 
     def __init__(self):
-        self.languages = {}
+        self.train_vectors = {}
+        self.y = {}
         self.knn_results = {}
         self.test_vectors = {}
 
@@ -16,21 +17,17 @@ class KNN:
         with open(textfile, 'rb') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
-                lang = row['Category']
-                if self.languages.get(lang) is None:
-                    self.languages[lang] = {}
+                row_id = row['Id']
+                self.y[row_id] = row['Category']
+                if self.train_vectors.get(row_id) is None:
+                    self.train_vectors[row_id] = {}
                 for word in nltk.word_tokenize(row['Text']):
-                    if self.languages[lang].has_key(word):
-                        self.languages[lang][word] += 1
+                    if self.train_vectors[row_id].has_key(word):
+                        self.train_vectors[row_id][word] += 1
                     else:
-                        self.languages[lang][word] = 1
-                    if word_count_in_languages.has_key(lang):
-                        word_count_in_languages[lang] += 1
-                    else:
-                        word_count_in_languages[lang] = 1
-            for lang in self.languages.keys():
-                for word, freq in self.languages[lang].iteritems():
-                    self.languages[lang][word] = float(self.languages[lang][word]) / float(word_count_in_languages[lang])
+                        self.train_vectors[row_id][word] = 1
+                for word, freq in self.train_vectors[row_id].iteritems():
+                    self.train_vectors[row_id][word] = float(self.train_vectors[row_id][word]) / float(sum(self.train_vectors[row_id].values()))
 
     def vectorize_test(self, testfile):
         with open(testfile, 'rb') as csvfile:
@@ -53,7 +50,8 @@ class KNN:
         f.write('Id,Category\n')
         for i in range(len(self.knn_results)):
             predictions[i] = {}
-            for lang,v in self.knn_results[i].iteritems():
+            for row_id,v in self.knn_results[i].iteritems():
+                lang = self.y[row_id]
                 if lang in predictions[i]:
                     predictions[i][lang] += 1
                 else:
@@ -66,14 +64,14 @@ class KNN:
         for test_row in self.test_vectors.keys():
             self.knn_results[test_row] = {}
             neighbours = {}
-            for lang in self.languages.keys():
+            for row_id in self.train_vectors.keys():
                 distance = 0
                 for word in self.test_vectors[test_row].keys():
-                    if word in self.languages[lang].keys():
-                        distance += (self.test_vectors[test_row][word] - self.languages[lang][word]) ** 2
+                    if word in self.train_vectors[row_id].keys():
+                        distance += (self.test_vectors[test_row][word] - self.train_vectors[row_id][word]) ** 2
                     else:
                         distance += (self.test_vectors[test_row][word] - 0) ** 2
-                neighbours[lang] = sqrt(distance)
+                neighbours[row_id] = sqrt(distance)
             neighbours = sorted(neighbours.iteritems(), key=lambda (k,v): (v,k))
             for i in range(int(k)):
                 self.knn_results[test_row][neighbours[i][0]] = neighbours[i][1]
