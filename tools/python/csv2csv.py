@@ -56,6 +56,9 @@ class CLI:
                     for entry in entries:
                         entries[entry]['text'] = "".join(entries[entry]['text'].split())
                         entries[entry]['text'] = entries[entry]['text'].replace(""," ")
+                elif algo == "no_space":
+                    for entry in entries:
+                        entries[entry]['text'] = "".join(entries[entry]['text'].split())
                 elif algo == "lower":
                     for entry in entries:
                         entries[entry]['text'] = entries[entry]['text'].lower()
@@ -68,6 +71,9 @@ class CLI:
                     strlen = int(algo[3:])
                     for entry in entries:
                         entries[entry]['text'] = entries[entry]['text'][0:strlen]
+                elif algo == "sort_lex":
+                    for entry in entries:
+                        entries[entry]['text'] = "".join(sorted(entries[entry]['text'], key=str.lower))
                 else:
                     print(">> Algorithm:",algo,"not found!")
         # Prepare output
