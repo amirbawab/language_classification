@@ -69,6 +69,14 @@ class CLI:
                             bestCategory = category
             dTextCategory[entry] = bestCategory
 
+        for entry in tEntries:
+            if entry['text'] in dTextCategory:
+                print("{},{}".format(entry['id'], dTextCategory[entry['text']]))
+        
+        # Halt
+        print("TO CONTINUE LCS HERE")
+        exit(0)
+
         # Run LCS
         memo = {}
         confidenceMemo = {}
