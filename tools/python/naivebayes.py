@@ -243,7 +243,7 @@ class NaiveBayes:
     def compute(self):
         """Compute probabilities"""
 
-        BIAS = 1
+        BIAS = 0.00001
         print(">> Computing P(Wi|Cj)")
         for word in self.m_wordGivenCategoryCounter:
 
