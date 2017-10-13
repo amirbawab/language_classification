@@ -8,8 +8,6 @@ class CLI:
         # Define arguments
         parser = argparse.ArgumentParser(description='Analyze csv file and apply naive bayes')
         parser.add_argument('-i','--input', nargs=1, help='CSV input file')
-        parser.add_argument('-c','--cache', nargs=1, help='Cache calculated probabilities to a file')
-        parser.add_argument('-l','--loadcache', nargs=1, help='Load cached probabilities from file')
         parser.add_argument('-t','--test', nargs=1, help='Load test sentences from CSV file')
         parser.add_argument('-o','--out', nargs=1, help='Output test result to CSV file or -- for stdout')
         parser.add_argument('-f','--frequency', nargs=1, help='Show word frequency')
@@ -26,7 +24,7 @@ class CLI:
         ratio = 0
 
         # Checkfor missing arguments
-        if args.input is None and args.loadcache is None:
+        if args.input is None:
             print("Missing arguments")
             exit(1)
 
@@ -40,50 +38,49 @@ class CLI:
         if args.strict is True:
             print(">> Strict mode enabled")
 
-        # Load input csv
-        if args.input is not None:
-            print(">> Loading:", args.input[0])
-            with open(args.input[0], newline='', encoding='utf-8') as csvfile:
-                reader = csv.DictReader(csvfile)
-                naiveBayes.m_totalUtt = 0
-                for row in reader:
-                    # Increment total utt
-                    naiveBayes.m_totalUtt += 1
+        # Process input
+        print(">> Loading:", args.input[0])
+        with open(args.input[0], newline='', encoding='utf-8') as csvfile:
+            reader = csv.DictReader(csvfile)
+            naiveBayes.m_totalUtt = 0
+            for row in reader:
+                # Increment total utt
+                naiveBayes.m_totalUtt += 1
 
-                    # Load attributes
-                    id = row['Id']
-                    category = row['Category']
-                    text = row['Text']
+                # Load attributes
+                id = row['Id']
+                category = row['Category']
+                text = row['Text']
 
-                    # Tokenize text
-                    tokens = text.split()
-                    for token in tokens:
+                # Tokenize text
+                tokens = text.split()
+                for token in tokens:
 
-                        # Init first dimension
-                        if token not in naiveBayes.m_wordGivenCategoryCounter:
-                            naiveBayes.m_wordGivenCategoryCounter[token] = {}
+                    # Init first dimension
+                    if token not in naiveBayes.m_wordGivenCategoryCounter:
+                        naiveBayes.m_wordGivenCategoryCounter[token] = {}
 
-                        # Init second dimension
-                        if category not in naiveBayes.m_wordGivenCategoryCounter[token]:
-                            naiveBayes.m_wordGivenCategoryCounter[token][category] = 0
+                    # Init second dimension
+                    if category not in naiveBayes.m_wordGivenCategoryCounter[token]:
+                        naiveBayes.m_wordGivenCategoryCounter[token][category] = 0
 
-                        # Increment counter
-                        naiveBayes.m_wordGivenCategoryCounter[token][category] += 1
+                    # Increment counter
+                    naiveBayes.m_wordGivenCategoryCounter[token][category] += 1
 
 
-                    # Init category counter
-                    if category not in naiveBayes.m_categoryCounter:
-                        naiveBayes.m_categoryCounter[category] = 0
+                # Init category counter
+                if category not in naiveBayes.m_categoryCounter:
+                    naiveBayes.m_categoryCounter[category] = 0
 
-                    # Increment category counter
-                    naiveBayes.m_categoryCounter[category] += 1
+                # Increment category counter
+                naiveBayes.m_categoryCounter[category] += 1
 
-                    # Init words per category counter
-                    if category not in naiveBayes.m_wordsInCategoryCounter:
-                        naiveBayes.m_wordsInCategoryCounter[category] = 0
+                # Init words per category counter
+                if category not in naiveBayes.m_wordsInCategoryCounter:
+                    naiveBayes.m_wordsInCategoryCounter[category] = 0
 
-                    # Increment words in category
-                    naiveBayes.m_wordsInCategoryCounter[category] += len(tokens)
+                # Increment words in category
+                naiveBayes.m_wordsInCategoryCounter[category] += len(tokens)
             
             # Filter counters using the ratio value
             if ratio > 0:
@@ -104,43 +101,6 @@ class CLI:
             debug.sort(key=lambda x: x['count'], reverse=True)
             for object in debug:
                 print("Word {} orrcurs {} in {}".format(object['word'], object['count'], object['category']))
-
-        # Load cached probabilities
-        if args.loadcache is not None:
-            print(">> Loading probabilities from cache:", args.loadcache[0])
-            with open(args.loadcache[0], newline='', encoding='utf-8') as csvfile:
-                reader = csv.DictReader(csvfile)
-                for row in reader:
-                    
-                    # CSV attribute
-                    word = row['Word']
-                    category = row['Category']
-                    probability = row['Probability']
-                    type = row['Type']
-                    
-                    # Load probability
-                    if type == "word":
-                        if word not in naiveBayes.m_pWordGivenCategory:
-                            naiveBayes.m_pWordGivenCategory[word] = {}
-                        naiveBayes.m_pWordGivenCategory[word][category] = float(probability)
-                    elif type == "category":
-                        naiveBayes.m_pCategory[category] = float(probability)
-
-        # Cache probabilities
-        if args.cache is not None:
-            print(">> Caching computed probabilities at:", args.cache[0])
-            cacheFile = open(args.cache[0], 'w')
-            cacheFile.write("Word,Category,Probability,Type\n")
-
-            # Write probability of categories
-            for category in naiveBayes.m_pCategory:
-                cacheFile.write(",{},{},category\n".format(category, naiveBayes.m_pCategory[category]))
-
-            # Write probability of words
-            for word in naiveBayes.m_pWordGivenCategory:
-                for category in naiveBayes.m_pWordGivenCategory[word]:
-                    cacheFile.write("{},{},{},word\n".format(word, category, naiveBayes.m_pWordGivenCategory[word][category]))
-            cacheFile.close()
 
         # Prepare output
         output = "Id,Category\n"
