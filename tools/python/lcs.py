@@ -1,15 +1,6 @@
 import argparse
 import csv
-
-def lcs(a, b):
-    lengths = [[0 for j in range(len(b)+1)] for i in range(len(a)+1)]
-    for i, x in enumerate(a):
-        for j, y in enumerate(b):
-            if x == y:
-                lengths[i+1][j+1] = lengths[i][j] + 1
-            else:
-                lengths[i+1][j+1] = max(lengths[i+1][j], lengths[i][j+1])
-    return lengths[len(a)][len(b)]
+import collections
 
 class CLI:
 
@@ -20,12 +11,17 @@ class CLI:
         parser = argparse.ArgumentParser(description='Analyze csv file and apply naive bayes')
         parser.add_argument('-d','--data', nargs=1, help='Data csv file. Id,Category,Text')
         parser.add_argument('-t','--test', nargs=1, help='Test csv file. Id,Text')
+        parser.add_argument('-r','--ratio', nargs=1, help='Ratio threshold value')
+        parser.add_argument('-o','--output', nargs=1, help='Output csv file')
         args = parser.parse_args()
 
         # Checkfor missing arguments
-        if args.data is None or args.test is None:
+        if args.data is None or args.test is None or args.output is None or args.ratio is None:
             print("Missing arguments")
             exit(1)
+
+        # Get LCS value
+        ratioThresh = float(args.ratio[0])
         
         # Files entries
         dEntries = []
@@ -69,52 +65,70 @@ class CLI:
                             bestCategory = category
             dTextCategory[entry] = bestCategory
 
-        for entry in tEntries:
-            if entry['text'] in dTextCategory:
-                print("{},{}".format(entry['id'], dTextCategory[entry['text']]))
-        
-        # Halt
-        print("TO CONTINUE LCS HERE")
-        exit(0)
+        # Prepare output
+        generated = set()
+        result = "Id,Category\n"
 
-        # Run LCS
+        # Start matching
+        print(">> Start matching")
         memo = {}
-        confidenceMemo = {}
+        progress = 0
         for entry in tEntries:
+            progress += 1
             category = -1
-            confidence = -1
+            
+            # Log progress
+            if progress % 10000 == 0:
+                print(">> Completed {} out of {}".format(progress, len(tEntries)))
 
-            # Check in memo
+            # Check if calculated already
             if entry['text'] in memo:
                 category = memo[entry['text']]
-                confidence = confidenceMemo[entry['text']]
 
-            # Find a complete match first
+            # Check if a complete key match is found
             elif entry['text'] in dTextCategory:
                 category = dTextCategory[entry['text']]
-                confidence = 1
 
-            # Otherwise, try LCS
+            # Compare the characters
             else:
-                bestLCS = -1
-                for key in dTextCategory:
-                    if len(key) >= len(entry['text']):
-                        lcsRet = lcs(key, entry['text'])
-                        if lcsRet > bestLCS:
-                            bestLCS = lcsRet
-                            category = dTextCategory[key]
-                        # If best we can get, don't continue
-                        if lcsRet == len(entry['text']):
-                            break
-                    
-                # Compute confidence level
-                if bestLCS == len(entry['text']):
-                    confidence = 1
-                else:
-                    confidence = bestLCS / len(entry['text'])
-                confidenceMemo[entry['text']] = confidence
+                categoryCounter = {}
+                longKeys = (x for x in dTextCategory if len(x) >= len(entry['text']))
+                for key in longKeys:
+
+                    # Find common characters
+                    matchCounter = 0
+                    letters = collections.Counter(key)
+                    for char in entry['text']:
+                        if char in letters and letters[char] > 0:
+                            letters[char] -= 1
+                            matchCounter += 1
+
+                    # Compute and compare the match ratio
+                    # FIXME handle case when len(entry['text']) is 0
+                    ratio = matchCounter / len(entry['text'])
+                    if ratio >= ratioThresh:
+                        if dTextCategory[key] not in categoryCounter:
+                            categoryCounter[dTextCategory[key]] = 0
+                        categoryCounter[dTextCategory[key]] += 1
+
+                # Select the best category
+                for tmpCat in categoryCounter:
+                    if category == -1 or categoryCounter[tmpCat] > categoryCounter[category]:
+                        category = tmpCat
+
+                # Memo result
                 memo[entry['text']] = category
-            print("[{}],{},{},{}".format(confidence, entry['id'], entry['text'], category))
+
+            # If category found, create entry
+            if category != -1:
+                result += "{},{}\n".format(entry['id'], category)
+
+        # Output
+        print(">> Generating output file:", args.output[0])
+        outputFile = open(args.output[0], 'w')
+        outputFile.write(result)
+        outputFile.close()
+
 
 
 # Stat application
