@@ -15,6 +15,7 @@ class KNN:
         self.y = []
         self.id = []
         self.knn_results = {}
+        self.categories = {}
         self.test_vectors = OrderedDict({})
         self.log_file = None
 
@@ -72,7 +73,7 @@ class KNN:
             for row in reader:
                 row_id = row['Id']
                 if int(row_id)%10000 == 0: self.write_to_log("Vectorizing training row: "+row_id)
-                self.y[row_id] = row['Category']
+                self.categories[row_id] = row['Category']
                 if self.train_vectors.get(row_id) is None: self.train_vectors[row_id] = {}
                 for word in nltk.word_tokenize(row['Text']):
                     try:
@@ -116,7 +117,7 @@ class KNN:
             predictions[test_row] = {}
             for i in range(int(k)):
                 row_id = neighbours[i][0]
-                lang = self.y[row_id]
+                lang = self.categories[row_id]
                 try:
                     predictions[test_row][lang] += 1
                 except KeyError:
@@ -132,13 +133,16 @@ class KNN:
         parser.add_argument('-t','--test', nargs=1, help='CSV test file',required=True)
         parser.add_argument('-o','--out', nargs=1, help='output CSV file',required=True)
         parser.add_argument('-l','--logfile', nargs=1, help='log file',required=True)
+        parser.add_argument('-c','--vectorizer', nargs=1, help='pass a value to use CountVectorizer to vectorize data else use term frequency')
         args = parser.parse_args()
         self.log_file = args.logfile[0]
-        self.vectorize_training_and_test_data(args.text[0], args.test[0])
-        self.predict_knn(args.knn[0],args.out[0])
-        # self.vectorize_training_data(args.text[0])
-        # self.vectorize_test(args.test[0])
-        # self.knn_calc(args.knn[0], args.out[0])
+        if args.vectorizer is None:
+            self.vectorize_training_data(args.text[0])
+            self.vectorize_test(args.test[0])
+            self.knn_calc(args.knn[0], args.out[0])
+        else:
+            self.vectorize_training_and_test_data(args.text[0], args.test[0])
+            self.predict_knn(args.knn[0],args.out[0])
 
 knn = KNN()
 knn.run_knn()
