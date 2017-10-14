@@ -3,14 +3,17 @@ from math import sqrt
 import nltk
 import csv
 import argparse
+import time
 from collections import OrderedDict
-
+from sklearn.feature_extraction.text import CountVectorizer
+import numpy
 
 class KNN:
 
     def __init__(self):
         self.train_vectors = {}
-        self.y = {}
+        self.y = []
+        self.id = []
         self.knn_results = {}
         self.test_vectors = OrderedDict({})
         self.log_file = None
@@ -18,6 +21,48 @@ class KNN:
     def write_to_log(self,text):
         with open(self.log_file,'a') as logger:
             logger.write(text+'\n')
+
+    def vectorize_training_and_test_data(self, trainfile,testfile):
+        self.write_to_log("-------------Vectorizing training and test data--------------")
+        X = []
+        X_test = []
+        with open(trainfile, 'rb') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                X.append(row['Text'])
+                self.y.append(row['Category'])
+
+        with open(testfile, 'rb') as csvfile:
+            reader = csv.DictReader(csvfile)
+            i = 0
+            for row in reader:
+                X_test.append(row['Text'])
+                self.id.append(row['Id'])
+                i+=1
+        vec = CountVectorizer(input='content',analyzer='char',decode_error='ignore',stop_words=None,ngram_range=(1,1))
+        self.train_vectors = vec.fit_transform(X,self.y).toarray()
+        self.test_vectors = vec.transform(X_test).toarray()
+
+    def predict_knn(self,k,outfile):
+        self.write_to_log("-------------Calculating nearest neighbours--------------")
+        f = open(outfile, 'w')
+        f.write('Id,Category\n')
+        predictions = {}
+        neighbours = {}
+        for test_row in range(len(self.test_vectors)):
+            if int(test_row)%1000 == 0: self.write_to_log("Calculating distances and prediction for row_id: "+str(test_row))
+            neighbours[test_row] = numpy.sqrt(numpy.sum((self.train_vectors - self.test_vectors[test_row])**2,axis=1)).argsort()[:int(k)]
+            predictions[test_row] = {}
+            for i in range(int(k)):
+                row_id = neighbours[test_row][i]
+                lang = self.y[row_id]
+                try:
+                    predictions[test_row][lang] += 1
+                except KeyError:
+                    predictions[test_row][lang] = 1
+            language_predicted = sorted(predictions[test_row].iteritems(), key=lambda (ke,v): (v,ke), reverse=True)[0][0]
+            f.write(str(self.id[test_row])+','+str(language_predicted)+'\n')
+        f.close()
 
     def vectorize_training_data(self, textfile):
         self.write_to_log("-------------Vectorizing training data--------------")
@@ -28,8 +73,7 @@ class KNN:
                 row_id = row['Id']
                 if int(row_id)%10000 == 0: self.write_to_log("Vectorizing training row: "+row_id)
                 self.y[row_id] = row['Category']
-                if self.train_vectors.get(row_id) is None:
-                    self.train_vectors[row_id] = {}
+                if self.train_vectors.get(row_id) is None: self.train_vectors[row_id] = {}
                 for word in nltk.word_tokenize(row['Text']):
                     try:
                         self.train_vectors[row_id][word] += 1
@@ -67,7 +111,7 @@ class KNN:
             if int(test_row)%10000 == 0: self.write_to_log("Calculating distances for row_id: "+test_row)
             for row_id in self.train_vectors.keys():
                 neighbours[row_id] = sqrt(sum({word: (self.test_vectors[test_row][word] - self.train_vectors[row_id].get(word,0))**2 for word in self.test_vectors[test_row].keys()}.values()))
-            neighbours = sorted(neighbours.iteritems(), key=lambda (k,v): (v,k))
+            neighbours = sorted(neighbours.iteritems(), key=lambda (ke,v): (v,ke))[0:k]
             if int(test_row)%10000 == 0: self.write_to_log("Predicting language for test row_id: "+test_row)
             predictions[test_row] = {}
             for i in range(int(k)):
@@ -90,9 +134,11 @@ class KNN:
         parser.add_argument('-l','--logfile', nargs=1, help='log file',required=True)
         args = parser.parse_args()
         self.log_file = args.logfile[0]
-        self.vectorize_training_data(args.text[0])
-        self.vectorize_test(args.test[0])
-        self.knn_calc(args.knn[0], args.out[0])
+        self.vectorize_training_and_test_data(args.text[0], args.test[0])
+        self.predict_knn(args.knn[0],args.out[0])
+        # self.vectorize_training_data(args.text[0])
+        # self.vectorize_test(args.test[0])
+        # self.knn_calc(args.knn[0], args.out[0])
 
 knn = KNN()
 knn.run_knn()
