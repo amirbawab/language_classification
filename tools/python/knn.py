@@ -3,6 +3,8 @@ from math import sqrt
 import nltk
 import csv
 import argparse
+from collections import OrderedDict
+
 
 class KNN:
 
@@ -10,7 +12,7 @@ class KNN:
         self.train_vectors = {}
         self.y = {}
         self.knn_results = {}
-        self.test_vectors = {}
+        self.test_vectors = OrderedDict({})
         self.log_file = None
 
     def write_to_log(self,text):
@@ -24,14 +26,14 @@ class KNN:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 row_id = row['Id']
-                self.write_to_log("Vectorizing training row: "+row_id)
+                if int(row_id)%10000 == 0: self.write_to_log("Vectorizing training row: "+row_id)
                 self.y[row_id] = row['Category']
                 if self.train_vectors.get(row_id) is None:
                     self.train_vectors[row_id] = {}
                 for word in nltk.word_tokenize(row['Text']):
-                    if self.train_vectors[row_id].has_key(word):
+                    try:
                         self.train_vectors[row_id][word] += 1
-                    else:
+                    except KeyError:
                         self.train_vectors[row_id][word] = 1
                 for word, freq in self.train_vectors[row_id].iteritems():
                     self.train_vectors[row_id][word] = float(self.train_vectors[row_id][word]) / float(sum(self.train_vectors[row_id].values()))
@@ -43,53 +45,41 @@ class KNN:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 row_id = row['Id']
-                self.write_to_log("Vectorizing test row: "+row_id)
+                if int(row_id)%1000 == 0: self.write_to_log("Vectorizing test row: "+row_id)
                 self.test_vectors[row_id] = {}
                 for word in nltk.word_tokenize(row['Text']):
-                    if self.test_vectors[row_id].has_key(word):
+                    try:
                         self.test_vectors[row_id][word] += 1
-                    else:
+                    except KeyError:
                         self.test_vectors[row_id][word] = 1
                 for word in nltk.word_tokenize(row['Text']):
                     self.test_vectors[row_id][word] = float(self.test_vectors[row_id][word]) / float(sum(self.test_vectors[row_id].values()))
         self.write_to_log("-------------Completed vectorizing test data--------------")
 
-    def predict(self, outfile):
-        predictions = {}
-        f = open(outfile, 'w')
-        f.write('Id,Category\n')
-        for i in range(len(self.knn_results)):
-            self.write_to_log("Predicting language for test row_id: "+i)
-            predictions[i] = {}
-            for row_id,v in self.knn_results[i].iteritems():
-                lang = self.y[row_id]
-                if lang in predictions[i]:
-                    predictions[i][lang] += 1
-                else:
-                    predictions[i][lang] = 1
-            language_predicted = sorted(predictions[i].iteritems(), key=lambda (k,v): (v,k), reverse=True)[0][0]
-            f.write(str(i)+','+str(language_predicted)+'\n')
-        f.close()
-
     def knn_calc(self, k, outfile):
         self.write_to_log("-------------Calculating nearest neighbours--------------")
+        f = open(outfile, 'w')
+        f.write('Id,Category\n')
+        predictions = {}
         for test_row in self.test_vectors.keys():
             self.knn_results[test_row] = {}
             neighbours = {}
-            self.write_to_log("Calculating distances for row_id: "+test_row)
+            if int(test_row)%10000 == 0: self.write_to_log("Calculating distances for row_id: "+test_row)
             for row_id in self.train_vectors.keys():
                 neighbours[row_id] = sqrt(sum({word: (self.test_vectors[test_row][word] - self.train_vectors[row_id].get(word,0))**2 for word in self.test_vectors[test_row].keys()}.values()))
-                # distance = 0
-                # for word in self.test_vectors[test_row].keys():
-                    # if word in self.train_vectors[row_id].keys():
-                    #     distance += (self.test_vectors[test_row][word] - self.train_vectors[row_id][word]) ** 2
-                    # else:
-                    #     distance += (self.test_vectors[test_row][word] - 0) ** 2
-                # neighbours[row_id] = sqrt(distance)
-        #     neighbours = sorted(neighbours.iteritems(), key=lambda (k,v): (v,k))
-        #     for i in range(int(k)):
-        #         self.knn_results[test_row][neighbours[i][0]] = neighbours[i][1]
-        # self.predict(outfile)
+            neighbours = sorted(neighbours.iteritems(), key=lambda (k,v): (v,k))
+            if int(test_row)%10000 == 0: self.write_to_log("Predicting language for test row_id: "+test_row)
+            predictions[test_row] = {}
+            for i in range(int(k)):
+                row_id = neighbours[i][0]
+                lang = self.y[row_id]
+                try:
+                    predictions[test_row][lang] += 1
+                except KeyError:
+                    predictions[test_row][lang] = 1
+            language_predicted = sorted(predictions[test_row].iteritems(), key=lambda (k,v): (v,k), reverse=True)[0][0]
+            f.write(str(test_row)+','+str(language_predicted)+'\n')
+        f.close()
 
     def run_knn(self):
         parser = argparse.ArgumentParser(description='KNN algorithm')
@@ -103,7 +93,6 @@ class KNN:
         self.vectorize_training_data(args.text[0])
         self.vectorize_test(args.test[0])
         self.knn_calc(args.knn[0], args.out[0])
-
 
 knn = KNN()
 knn.run_knn()
