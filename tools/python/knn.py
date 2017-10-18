@@ -45,13 +45,13 @@ class KNN:
         self.test_vectors = vec.transform(X_test).toarray()
 
     def predict_knn(self,k,outfile,start,end):
-        self.write_to_log("-------------Calculating nearest neighbours--------------")
+        self.write_to_log("-------------Calculating nearest neighbours from row_id: "+start+" to row_id: "+end+"--------------")
         f = open(outfile, 'w')
-        f.write('Id,Category\n')
+        # f.write('Id,Category\n')
         predictions = {}
         neighbours = {}
         for test_row in range(start,end):
-            if int(test_row)%1000 == 0: self.write_to_log("Calculating distances and prediction for row_id: "+str(test_row))
+            # if int(test_row)%1000 == 0: self.write_to_log("Calculating distances and prediction for row_id: "+str(test_row))
             neighbours[test_row] = numpy.sqrt(numpy.sum((self.train_vectors - self.test_vectors[test_row])**2,axis=1)).argsort()[:int(k)]
             predictions[test_row] = {}
             for i in range(int(k)):
@@ -63,6 +63,7 @@ class KNN:
                     predictions[test_row][lang] = 1
             language_predicted = sorted(predictions[test_row].iteritems(), key=lambda (ke,v): (v,ke), reverse=True)[0][0]
             f.write(str(self.id[test_row])+','+str(language_predicted)+'\n')
+        self.write_to_log("-------------Completed calculating nearest neighbours from row_id: "+start+" to row_id: "+end+"--------------")
         f.close()
 
     def vectorize_training_data(self, textfile):
@@ -148,22 +149,32 @@ class KNN:
         if args.optimize:
             self.vectorize_training_and_test_data(args.text[0], args.test[0])
             threads = []
-            st = 0
-            en = 15000
-            for i in range(8):
-                t = threading.Thread(target=self.classify_text, args = (args.text[0],args.test[0],args.knn[0],args.out[0],args.optimize,st,en,i))
-                st+=15000
-                if i == 6:
-                    en = len(self.test_vectors)
-                else:
-                    en+=15000
-                threads.append(t)
-                t.start()
+            i=0
+            while i < len(self.test_vectors):
+                self.write_to_log("-------------Starting 8 new threads--------------")
+                self.write_to_log("-------------Predictions so far: "+str(i)+"--------------")
+                t_id=0
+                en = 0
+                for j in range(8):
+                    t_id+=1
+                    st = i
+                    en = i+1000
+                    if en > len(self.test_vectors):
+                        en = len(self.test_vectors)
+                    t = threading.Thread(target=self.classify_text, args = (args.text[0],args.test[0],args.knn[0],args.out[0],args.optimize,st,en,t_id))
+                    threads.append(t)
+                    t.start()
+                    i = en
+                    if en >= len(self.test_vectors):
+                        break
+                for x in threads:
+                    x.join()
+                if i >= len(self.test_vectors):
+                    break
         else:
             self.vectorize_training_data(args.text[0])
             self.vectorize_test(args.test[0])
             self.knn_calc(args.knn[0], args.out[0])
-
 
 
 knn = KNN()
