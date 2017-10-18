@@ -127,17 +127,12 @@ class KNN:
         f.close()
 
 
-    def classify_text(self, textfile, testfile, k_count, outfile, vectorize, start, end, thread_id=None):
-        if vectorize is None:
-            self.vectorize_training_data(textfile)
-            self.vectorize_test(testfile)
-            self.knn_calc(k_count, outfile)
-        else:
-            dir_name = os.path.dirname(outfile)
-            base = os.path.basename(outfile)
-            f = os.path.splitext(base)
-            outfile = os.path.join(dir_name,f[0]+str(thread_id)+f[1])
-            self.predict_knn(k_count,outfile,start,end)
+    def classify_text(self, textfile, testfile, k_count, outfile, optimize, start, end, thread_id=None):
+        dir_name = os.path.dirname(outfile)
+        base = os.path.basename(outfile)
+        f = os.path.splitext(base)
+        outfile = os.path.join(dir_name,f[0]+str(thread_id)+f[1])
+        self.predict_knn(k_count,outfile,start,end)
 
 
     def run_knn(self):
@@ -147,18 +142,16 @@ class KNN:
         parser.add_argument('-t','--test', nargs=1, help='CSV test file',required=True)
         parser.add_argument('-o','--out', nargs=1, help='output CSV file',required=True)
         parser.add_argument('-l','--logfile', nargs=1, help='log file',required=True)
-        parser.add_argument('-thread', action='store_true', help='Perform threading for knn')
-        parser.add_argument('-c','--vectorize', action='store_true', help='pass a value to use CountVectorizer to vectorize data else use term frequency')
+        parser.add_argument('-optimize', action='store_true', help='Perform threading for knn and use CountVectorizer to vectorize data')
         args = parser.parse_args()
         self.log_file = args.logfile[0]
-        if args.vectorize:
+        if args.optimize:
             self.vectorize_training_and_test_data(args.text[0], args.test[0])
-        threads = []
-        st = 0
-        en = 15000
-        if args.thread:
+            threads = []
+            st = 0
+            en = 15000
             for i in range(8):
-                t = threading.Thread(target=self.classify_text, args = (args.text[0],args.test[0],args.knn[0],args.out[0],args.vectorize,st,en,i))#kwargs={'textfile':args.text[0], 'testfile':args.test[0], 'k_count':args.knn[0], 'outfile':args.out[0], 'vectorize':args.vectorize})
+                t = threading.Thread(target=self.classify_text, args = (args.text[0],args.test[0],args.knn[0],args.out[0],args.optimize,st,en,i))
                 st+=15000
                 if i == 6:
                     en = len(self.test_vectors)
@@ -166,6 +159,11 @@ class KNN:
                     en+=15000
                 threads.append(t)
                 t.start()
+        else:
+            self.vectorize_training_data(args.text[0])
+            self.vectorize_test(args.test[0])
+            self.knn_calc(args.knn[0], args.out[0])
+
 
 
 knn = KNN()
