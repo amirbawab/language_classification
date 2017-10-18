@@ -4,6 +4,8 @@ import collections
 import math
 import threading
 
+CORES = 7
+
 def match(longTestEntries, longTrainEntries, fromIndex, toIndex, fileName):
     # Prepare output
     print(">> Generating csv file:", fileName)
@@ -15,8 +17,8 @@ def match(longTestEntries, longTrainEntries, fromIndex, toIndex, fileName):
     match = 0
     for testEntryIndex in range(fromIndex, toIndex+1):
         if progress % 100 == 0:
-            print(">> Completed {} out of {} long test entries, with {} matches, starting index {}".format(
-                progress, len(longTestEntries), match, fromIndex))
+            print(">> Completed {} out of {} long test entries, with {} matches".format(
+                fromIndex + progress, toIndex, match))
         testEntry = longTestEntries[testEntryIndex]
         for trainEntry in longTrainEntries:
             diff = 0
@@ -36,7 +38,7 @@ def match(longTestEntries, longTrainEntries, fromIndex, toIndex, fileName):
             for key in trainKeyEx:
                 diff += trainEntry['collections'][key]
             if diff < 5:
-                outputFile.write("{},{}".format(testEntry['id'], trainEntry['category']))
+                outputFile.write("{},{}\n".format(testEntry['id'], trainEntry['category']))
                 match+=1
         progress+=1
     outputFile.close()
@@ -109,7 +111,7 @@ class CLI:
         for trainEntry in longTrainEntries:
             trainEntry['collections'] = collections.Counter(trainEntry['text'])
 
-        parts = list(range(0, len(longTestEntries), math.ceil(len(longTestEntries)/8)))
+        parts = list(range(0, len(longTestEntries), math.ceil(len(longTestEntries)/CORES)))
 
         # Create threads
         threads = []
