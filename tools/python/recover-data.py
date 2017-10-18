@@ -15,7 +15,7 @@ def match(longTestEntries, longTrainEntries, fromIndex, toIndex, fileName):
     # Compare entries
     progress = 0
     match = 0
-    for testEntryIndex in range(fromIndex, toIndex+1):
+    for testEntryIndex in range(fromIndex, toIndex):
         # Log progress
         if progress % 100 == 0:
             print(">> Completed {} out of {} long test entries, with {} matches".format(
@@ -41,11 +41,10 @@ def match(longTestEntries, longTrainEntries, fromIndex, toIndex, fileName):
 
             # Increment counter if the missing characters
             # are below the threshold
-            if missing <= 2:
+            if missing <= 1:
                 if trainEntry['category'] not in categoriesCounter:
                     categoriesCounter[trainEntry['category']] = 0
                 categoriesCounter[trainEntry['category']] += 1
-                match+=1
 
         # Select the best category
         selectedCategory = -1
@@ -56,6 +55,7 @@ def match(longTestEntries, longTrainEntries, fromIndex, toIndex, fileName):
         # Write category in file
         if selectedCategory != -1:
             outputFile.write("{},{}\n".format(testEntry['id'], selectedCategory))
+            match+=1
         progress+=1
     outputFile.close()
 
@@ -121,7 +121,7 @@ class CLI:
         longTestEntries = list(x for x in tEntries if len(x['text']) == 20)
         longTrainEntries = []
         for entry in dTextCategory:
-            if len(entry) > 20 and len(entry) <= 21:
+            if len(entry) > 20 and len(entry) <= 23:
                 longTrainEntries.append({'text': entry, 'category': dTextCategory[entry]})
 
         # Add collections
