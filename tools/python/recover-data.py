@@ -16,30 +16,46 @@ def match(longTestEntries, longTrainEntries, fromIndex, toIndex, fileName):
     progress = 0
     match = 0
     for testEntryIndex in range(fromIndex, toIndex+1):
+        # Log progress
         if progress % 100 == 0:
             print(">> Completed {} out of {} long test entries, with {} matches".format(
                 fromIndex + progress, toIndex, match))
+        
+        # Start comparing test and training entries    
+        categoriesCounter = {}
         testEntry = longTestEntries[testEntryIndex]
         for trainEntry in longTrainEntries:
-            diff = 0
+            missing=0
             testKeySet = set(testEntry['collections'].keys())
             trainKeySet = set(trainEntry['collections'].keys())
 
             # Compute intersction
             intersect = testKeySet & trainKeySet
             testKeyEx = testKeySet - intersect
-            trainKeyEx = trainKeySet-  intersect
             
             # Compute the dif
             for key in intersect:
-                diff += abs(trainEntry['collections'][key] - testEntry['collections'][key])
+                missing += max(0, testEntry['collections'][key] - trainEntry['collections'][key])
             for key in testKeyEx:
-                diff += testEntry['collections'][key]
-            for key in trainKeyEx:
-                diff += trainEntry['collections'][key]
-            if diff < 5:
-                outputFile.write("{},{}\n".format(testEntry['id'], trainEntry['category']))
+                missing += testEntry['collections'][key]
+
+            # Increment counter if the missing characters
+            # are below the threshold
+            if missing <= 2:
+                if trainEntry['category'] not in categoriesCounter:
+                    categoriesCounter[trainEntry['category']] = 0
+                categoriesCounter[trainEntry['category']] += 1
                 match+=1
+
+        # Select the best category
+        selectedCategory = -1
+        for tmpCategory in categoriesCounter:
+            if selectedCategory == -1 or categoriesCounter[selectedCategory] < categoriesCounter[tmpCategory]:
+                selectedCategory = tmpCategory
+
+        # Write category in file
+        if selectedCategory != -1:
+            outputFile.write("{},{}\n".format(testEntry['id'], selectedCategory))
         progress+=1
     outputFile.close()
 
@@ -101,9 +117,12 @@ class CLI:
                             bestCategory = category
             dTextCategory[entry] = bestCategory
 
-        # Remove data is less than 20
-        longTrainEntries = list(x for x in dEntries if len(x['text']) > 20 and len(x['text']) < 22)
+        # Create long keys
         longTestEntries = list(x for x in tEntries if len(x['text']) == 20)
+        longTrainEntries = []
+        for entry in dTextCategory:
+            if len(entry) > 20 and len(entry) <= 21:
+                longTrainEntries.append({'text': entry, 'category': dTextCategory[entry]})
 
         # Add collections
         for testEntry in longTestEntries:
@@ -111,6 +130,7 @@ class CLI:
         for trainEntry in longTrainEntries:
             trainEntry['collections'] = collections.Counter(trainEntry['text'])
 
+        # Split test for threading
         parts = list(range(0, len(longTestEntries), math.ceil(len(longTestEntries)/CORES)))
 
         # Create threads
