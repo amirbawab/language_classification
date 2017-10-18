@@ -1,9 +1,47 @@
 import argparse
 import csv
 import collections
+import math
+import threading
+
+def match(longTestEntries, longTrainEntries, fromIndex, toIndex, fileName):
+    # Prepare output
+    print(">> Generating csv file:", fileName)
+    outputFile = open(fileName, 'w')
+    outputFile.write("Id,Category\n")
+
+    # Compare entries
+    progress = 0
+    match = 0
+    for testEntryIndex in range(fromIndex, toIndex+1):
+        if progress % 100 == 0:
+            print(">> Completed {} out of {} long test entries, with {} matches, starting index {}".format(
+                progress, len(longTestEntries), match, fromIndex))
+        testEntry = longTestEntries[testEntryIndex]
+        for trainEntry in longTrainEntries:
+            diff = 0
+            testKeySet = set(testEntry['collections'].keys())
+            trainKeySet = set(trainEntry['collections'].keys())
+
+            # Compute intersction
+            intersect = testKeySet & trainKeySet
+            testKeyEx = testKeySet - intersect
+            trainKeyEx = trainKeySet-  intersect
+            
+            # Compute the dif
+            for key in intersect:
+                diff += abs(trainEntry['collections'][key] - testEntry['collections'][key])
+            for key in testKeyEx:
+                diff += testEntry['collections'][key]
+            for key in trainKeyEx:
+                diff += trainEntry['collections'][key]
+            if diff < 5:
+                outputFile.write("{},{}".format(testEntry['id'], trainEntry['category']))
+                match+=1
+        progress+=1
+    outputFile.close()
 
 class CLI:
-
     def read(self):
         """Initialize a command line interface"""
 
@@ -61,11 +99,6 @@ class CLI:
                             bestCategory = category
             dTextCategory[entry] = bestCategory
 
-        # Prepare output
-        print(">> Generating csv file:", args.output[0])
-        outputFile = open(args.output[0], 'w')
-        outputFile.write("Id,Category\n")
-
         # Remove data is less than 20
         longTrainEntries = list(x for x in dEntries if len(x['text']) > 20 and len(x['text']) < 22)
         longTestEntries = list(x for x in tEntries if len(x['text']) == 20)
@@ -76,34 +109,25 @@ class CLI:
         for trainEntry in longTrainEntries:
             trainEntry['collections'] = collections.Counter(trainEntry['text'])
 
-        # Compare entries
-        progress = 0
-        match = 0
-        for testEntry in longTestEntries:
-            if progress % 100 == 0:
-                print(">> Completed {} out of {} long test entries, with {} matches".format(progress, len(longTestEntries), match))
-            for trainEntry in longTrainEntries:
-                diff = 0
-                testKeySet = set(testEntry['collections'].keys())
-                trainKeySet = set(trainEntry['collections'].keys())
+        parts = list(range(0, len(longTestEntries), math.ceil(len(longTestEntries)/8)))
 
-                # Compute intersction
-                intersect = testKeySet & trainKeySet
-                testKeyEx = testKeySet - intersect
-                trainKeyEx = trainKeySet-  intersect
-                
-                # Compute the dif
-                for key in intersect:
-                    diff += abs(trainEntry['collections'][key] - testEntry['collections'][key])
-                for key in testKeyEx:
-                    diff += testEntry['collections'][key]
-                for key in trainKeyEx:
-                    diff += trainEntry['collections'][key]
-                if diff < 5:
-                    outputFile.write("{},{}".format(testEntry['id'], trainEntry['category']))
-                    match+=1
-            progress+=1
-        outputFile.close()
+        # Create threads
+        threads = []
+        for i in range(len(parts)):
+            fromIndex = parts[i]
+            toIndex = 0
+            if i == len(parts)-1:
+                toIndex = len(longTestEntries)
+            else:
+                toIndex = parts[i+1]
+            threads.append(threading.Thread(target=match, args=(
+                longTestEntries, longTrainEntries, fromIndex, toIndex, 
+                "{}-{}".format(args.output[0], fromIndex),)))
+            threads[-1].start()
+
+        # Join threads
+        for thread in threads:
+            thread.join()
 
 # Stat application
 cli = CLI()
