@@ -45,17 +45,18 @@ class KNN:
         self.test_vectors = vec.transform(X_test).toarray()
 
     def predict_knn(self,k,outfile,start,end):
-        self.write_to_log("-------------Calculating nearest neighbours from row_id: "+start+" to row_id: "+end+"--------------")
-        f = open(outfile, 'w')
+        self.write_to_log("-------------Calculating nearest neighbours from row_id: "+str(start)+" to row_id: "+str(end)+"--------------")
+        f = open(outfile, 'a')
         # f.write('Id,Category\n')
         predictions = {}
         neighbours = {}
         for test_row in range(start,end):
             # if int(test_row)%1000 == 0: self.write_to_log("Calculating distances and prediction for row_id: "+str(test_row))
-            neighbours[test_row] = numpy.sqrt(numpy.sum((self.train_vectors - self.test_vectors[test_row])**2,axis=1)).argsort()[:int(k)]
+            neighbours[test_row] = zip(range(len(self.train_vectors)),numpy.sqrt(numpy.sum((self.train_vectors - self.test_vectors[test_row])**2,axis=1)))
+            neighbours[test_row] = sorted(neighbours[test_row], key=lambda tup: tup[1])[0:k]
             predictions[test_row] = {}
-            for i in range(int(k)):
-                row_id = neighbours[test_row][i]
+            for i in range(k):
+                row_id = neighbours[test_row][i][0]
                 lang = self.y[row_id]
                 try:
                     predictions[test_row][lang] += 1
@@ -63,7 +64,7 @@ class KNN:
                     predictions[test_row][lang] = 1
             language_predicted = sorted(predictions[test_row].iteritems(), key=lambda (ke,v): (v,ke), reverse=True)[0][0]
             f.write(str(self.id[test_row])+','+str(language_predicted)+'\n')
-        self.write_to_log("-------------Completed calculating nearest neighbours from row_id: "+start+" to row_id: "+end+"--------------")
+        self.write_to_log("-------------Completed calculating nearest neighbours from row_id: "+str(start)+" to row_id: "+str(end)+"--------------")
         f.close()
 
     def vectorize_training_data(self, textfile):
@@ -116,7 +117,7 @@ class KNN:
             neighbours = sorted(neighbours.iteritems(), key=lambda (ke,v): (v,ke))[0:k]
             if int(test_row)%10000 == 0: self.write_to_log("Predicting language for test row_id: "+test_row)
             predictions[test_row] = {}
-            for i in range(int(k)):
+            for i in range(k):
                 row_id = neighbours[i][0]
                 lang = self.categories[row_id]
                 try:
@@ -126,15 +127,6 @@ class KNN:
             language_predicted = sorted(predictions[test_row].iteritems(), key=lambda (k,v): (v,k), reverse=True)[0][0]
             f.write(str(test_row)+','+str(language_predicted)+'\n')
         f.close()
-
-
-    def classify_text(self, textfile, testfile, k_count, outfile, optimize, start, end, thread_id=None):
-        dir_name = os.path.dirname(outfile)
-        base = os.path.basename(outfile)
-        f = os.path.splitext(base)
-        outfile = os.path.join(dir_name,f[0]+str(thread_id)+f[1])
-        self.predict_knn(k_count,outfile,start,end)
-
 
     def run_knn(self):
         parser = argparse.ArgumentParser(description='KNN algorithm')
@@ -150,6 +142,8 @@ class KNN:
             self.vectorize_training_and_test_data(args.text[0], args.test[0])
             threads = []
             i=0
+            outfile = args.out[0]
+            outfiles = [None] * 8
             while i < len(self.test_vectors):
                 self.write_to_log("-------------Starting 8 new threads--------------")
                 self.write_to_log("-------------Predictions so far: "+str(i)+"--------------")
@@ -159,9 +153,15 @@ class KNN:
                     t_id+=1
                     st = i
                     en = i+1000
+                    if outfiles[j] is None:
+                        dir_name = os.path.dirname(outfile)
+                        base = os.path.basename(outfile)
+                        f = os.path.splitext(base)
+                        outfiles[j] = os.path.join(dir_name,f[0]+str(t_id)+f[1])
+                        os.remove(outfiles[j])
                     if en > len(self.test_vectors):
                         en = len(self.test_vectors)
-                    t = threading.Thread(target=self.classify_text, args = (args.text[0],args.test[0],args.knn[0],args.out[0],args.optimize,st,en,t_id))
+                    t = threading.Thread(target=self.predict_knn, args = (int(args.knn[0]),outfiles[j],st,en))
                     threads.append(t)
                     t.start()
                     i = en
@@ -174,7 +174,7 @@ class KNN:
         else:
             self.vectorize_training_data(args.text[0])
             self.vectorize_test(args.test[0])
-            self.knn_calc(args.knn[0], args.out[0])
+            self.knn_calc(int(args.knn[0]), args.out[0])
 
 
 knn = KNN()
