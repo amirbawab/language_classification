@@ -4,7 +4,7 @@ import collections
 import math
 import threading
 
-CORES = 7
+CORES = 8
 
 def match(longTestEntries, longTrainEntries, fromIndex, toIndex, fileName):
     # Prepare output
@@ -121,7 +121,7 @@ class CLI:
         longTestEntries = list(x for x in tEntries if len(x['text']) == 20)
         longTrainEntries = []
         for entry in dTextCategory:
-            if len(entry) > 20 and len(entry) <= 23:
+            if len(entry) > 20 and len(entry) <= 30:
                 longTrainEntries.append({'text': entry, 'category': dTextCategory[entry]})
 
         # Add collections
