@@ -13,7 +13,7 @@ import os
 class KNN:
 
     def __init__(self):
-        self.train_vectors = {}
+        self.train_vectors = OrderedDict({})
         self.y = []
         self.id = []
         self.knn_results = {}
@@ -158,7 +158,7 @@ class KNN:
                         base = os.path.basename(outfile)
                         f = os.path.splitext(base)
                         outfiles[j] = os.path.join(dir_name,f[0]+str(t_id)+f[1])
-                        os.remove(outfiles[j])
+                        if os.path.isfile(outfiles[j]): os.remove(outfiles[j])
                     if en > len(self.test_vectors):
                         en = len(self.test_vectors)
                     t = threading.Thread(target=self.predict_knn, args = (int(args.knn[0]),outfiles[j],st,en))
