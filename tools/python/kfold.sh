@@ -61,11 +61,29 @@ function naivebayes_f1_f2() {
     comparecsv "$k" "$outdir"
 }
 
+function naivebayes_f1_f2_em() {
+    k=$1
+    outdir="NB+F1+F2+EM"
+    echo "Executing Exact Match for k=$k"
+    mkdir -p "$KFOLD_DIR/results/$outdir"
+    python "$TOOLS_DIR/exact-match.py" \
+        -d "$KFOLD_DIR/train-em/train$k" \
+        -t "$KFOLD_DIR/test-em/test$k" \
+        -o "$KFOLD_DIR/results/$outdir/merge$k" > /dev/null
+
+    python "$TOOLS_DIR/manipsubmit.py" \
+        -i "$KFOLD_DIR/results/NB+F1+F2/out$k" \
+        -m "$KFOLD_DIR/results/$outdir/merge$k" \
+        -o "$KFOLD_DIR/results/$outdir/out$k" > /dev/null
+
+    comparecsv "$k" "$outdir"
+}
 
 for k in {1..10}
 do
     naivebayes $k
     naivebayes_f1 $k
     naivebayes_f1_f2 $k
+    naivebayes_f1_f2_em $k
     echo "----------------------"
 done
