@@ -4,7 +4,7 @@ import collections
 import math
 import threading
 
-CORES = 8
+CORES = 1
 
 def match(longTestEntries, longTrainEntries, fromIndex, toIndex, fileName):
     # Prepare output
@@ -41,7 +41,7 @@ def match(longTestEntries, longTrainEntries, fromIndex, toIndex, fileName):
 
             # Increment counter if the missing characters
             # are below the threshold
-            if missing <= 1:
+            if missing == 0:
                 if trainEntry['category'] not in categoriesCounter:
                     categoriesCounter[trainEntry['category']] = 0
                 categoriesCounter[trainEntry['category']] += 1
@@ -121,7 +121,7 @@ class CLI:
         longTestEntries = list(x for x in tEntries if len(x['text']) == 20)
         longTrainEntries = []
         for entry in dTextCategory:
-            if len(entry) > 20 and len(entry) <= 30:
+            if len(entry) > 20 and len(entry) <= 26:
                 longTrainEntries.append({'text': entry, 'category': dTextCategory[entry]})
 
         # Add collections

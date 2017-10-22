@@ -61,9 +61,29 @@ function naivebayes_f1_f2() {
     comparecsv "$k" "$outdir"
 }
 
-function naivebayes_f1_f2_em() {
+# Naive-bayes with filter 1, filter 2, Recover Data
+function naivebayes_f1_f2_rd() {
     k=$1
-    outdir="NB+F1+F2+EM"
+    outdir="NB+F1+F2+RD"
+    echo "Executing Recover data for k=$k"
+    mkdir -p "$KFOLD_DIR/results/$outdir"
+    python "$TOOLS_DIR/recover-data.py" \
+        -d "$KFOLD_DIR/train-em/train$k" \
+        -t "$KFOLD_DIR/test-em/test$k" \
+        -o "$KFOLD_DIR/results/$outdir/merge$k" > /dev/null
+
+    python "$TOOLS_DIR/manipsubmit.py" \
+        -i "$KFOLD_DIR/results/NB+F1+F2/out$k" \
+        -m "$KFOLD_DIR/results/$outdir/merge$k-0" \
+        -o "$KFOLD_DIR/results/$outdir/out$k" > /dev/null
+    
+    comparecsv "$k" "$outdir"
+}
+
+# Naive-bayes with filter 1, filter 2, Recover Data and Exact Match
+function naivebayes_f1_f2_rd_em() {
+    k=$1
+    outdir="NB+F1+F2+RD+EM"
     echo "Executing Exact Match for k=$k"
     mkdir -p "$KFOLD_DIR/results/$outdir"
     python "$TOOLS_DIR/exact-match.py" \
@@ -72,7 +92,7 @@ function naivebayes_f1_f2_em() {
         -o "$KFOLD_DIR/results/$outdir/merge$k" > /dev/null
 
     python "$TOOLS_DIR/manipsubmit.py" \
-        -i "$KFOLD_DIR/results/NB+F1+F2/out$k" \
+        -i "$KFOLD_DIR/results/NB+F1+F2+RD/out$k" \
         -m "$KFOLD_DIR/results/$outdir/merge$k" \
         -o "$KFOLD_DIR/results/$outdir/out$k" > /dev/null
 
@@ -84,6 +104,7 @@ do
     naivebayes $k
     naivebayes_f1 $k
     naivebayes_f1_f2 $k
-    naivebayes_f1_f2_em $k
+    naivebayes_f1_f2_rd $k
+    naivebayes_f1_f2_rd_em $k
     echo "----------------------"
 done
