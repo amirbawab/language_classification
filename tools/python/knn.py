@@ -139,6 +139,7 @@ class KNN:
         args = parser.parse_args()
         self.log_file = args.logfile[0]
         if args.optimize:
+            # Running 8 threads to each compute 1000 test rows at a time
             self.vectorize_training_and_test_data(args.text[0], args.test[0])
             threads = []
             i=0

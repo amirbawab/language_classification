@@ -1,5 +1,3 @@
-#run as python knn-library.py -f <space separated filename>
-
 import os
 import csv
 from sklearn.neighbors import KNeighborsClassifier
