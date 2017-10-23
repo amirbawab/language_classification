@@ -124,8 +124,14 @@ python3 manipsubmit.py \
     -m AD*.csv \
     -o NB**+AD*.csv
 ```
-### To run Random Forests, Multilayer Perceptron, Logistic Regression, Decision Trees, and Multinomial Naive Bayes (sklearn)
+### Random Forests, Multilayer Perceptron, Logistic Regression, Decision Trees, and Multinomial Naive Bayes (sklearn)
 #####
+
+*Make sure to download the <a href="https://goo.gl/Bvm8t7">csv.tar.gz</a> for the required train and test files*  
+*To run these algorithms with enhanced k-folds:
+```
+python2 properKFold_scikit.py /path-to-csv-kfolds-folder-that-you-downloaded/
+```
 *To run these algorithms:
 ```
 python2 rf_lr_mlp_dt.py train_set_xy_1.csv
