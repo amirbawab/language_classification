@@ -134,7 +134,7 @@ python3 comparecsv.py \
 *Note: This script is useful to compare locally the output difference between a previously submitted csv file and a new generated one.*
 
 ### Run Cross-Validation
-*Make sure to download the csv.tar.gz*  
+*Make sure to download the <a href="https://goo.gl/UkHUDQ">csv.tar.gz</a> for the required train and test files*  
 *Edit file `kfold.sh` and set the path to downloaded/extracted csv directory*
 ```
 bash kfold.sh
