@@ -43,7 +43,7 @@ python3 maniptest.py \
 ##### To run kNN from scratch:
 *To run non-optimized knn (vectorization term frequency ratio and distance computation is row-wise)*
 ```
-python knn.py \
+python2 knn.py \
     -f train_set_xy_1.csv \
     -t test_set_x.csv \
     -k <k_value> \
@@ -52,7 +52,7 @@ python knn.py \
 ```
 *To run optimized knn (threaded, CountVectorizer for vectorization, distance computation is matrix level)*
 ```
-python knn.py \
+python2 knn.py \
     -optimize \
     -f train_set_xy_1.csv \
     -t test_set_x.csv \
@@ -62,7 +62,7 @@ python knn.py \
 ```
 ##### To run kNN using scikit:
 ```
-python knn-library.py \
+python2 knn-library.py \
     -f train_set_xy_1.csv \
     -t test_set_x.csv \
     -k <k_value> \
