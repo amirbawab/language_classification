@@ -83,7 +83,7 @@ class CLI:
             longTestEntries = list(x for x in tEntries if len(x['text']) == 20)
             longTrainEntries = []
             for entry in dTextCategory:
-                if len(entry) >= 21 and len(entry) <= 27:
+                if len(entry) >= 21 and len(entry) <= 26:
                     longTrainEntries.append({'text': entry, 'category': dTextCategory[entry]})
 
             # Compare entries
