@@ -8,12 +8,14 @@ This is a project for COMP-551 Applied Machine Learning. For this task, we would
 ## Commands
 *All scripts used in this section are available under `tools/python/` directory*
 
+**All scripts has been test on &ast;nix machines only, and there is no guarantee to work on other platforms**
+
 ### Generate csv files
 
 #### Generate an enhanced training set csv
 *Merge `train_set_x.csv` and `train_set_y.csv` into a single file. Furthermore, convert all characters to lower case and place a single whitespace between each two consecutive characters*
 ```
-python csv2csv.py \
+python3 csv2csv.py \
     -t train_set_x.csv \
     -l train_set_y.csv \
     -o train_set_xy_1.csv \
@@ -22,7 +24,7 @@ python csv2csv.py \
 
 *Merge `train_set_x.csv` and `train_set_y.csv` into a single file. Furthermore, convert all characters to lower case, remove all whitespaces and sort each sentence lexically*
 ```
-python csv2csv.py \
+python3 csv2csv.py \
     -t train_set_x.csv \
     -l train_set_y.csv \
     -o train_set_xy_2.csv \
@@ -31,7 +33,7 @@ python csv2csv.py \
 
 *Create an enhanced `test_set_x.csv` file. In the new file, remove all whitespaces and sort each sentence lexically*
 ```
-python maniptest.py \
+python3 maniptest.py \
     -i test_set_x.csv \
     -o test_set_x_1.csv \
     -a no_space sort_lex
@@ -71,7 +73,7 @@ python knn-library.py \
 #### To run Naive-Bayes
 *Wihtout filters*
 ```
-python naivebayes.py \
+python3 naivebayes.py \
     -i train_set_xy_1.csv \
     -t test_set_x.csv \
     -o NB.csv
@@ -79,7 +81,7 @@ python naivebayes.py \
 
 *With first filter*
 ```
-python naivebayes.py \
+python3 naivebayes.py \
     -i train_set_xy_1.csv \
     -t test_set_x.csv \
     -r 0.004 \
@@ -88,7 +90,7 @@ python naivebayes.py \
 
 *With first and second filters*
 ```
-python naivebayes.py \
+python3 naivebayes.py \
     -i train_set_xy_1.csv \
     -t test_set_x.csv \
     -r 0.004 \
@@ -100,7 +102,7 @@ python naivebayes.py \
 #### To run Anagram Detection
 *Without extension*
 ```
-python anagrams.py \
+python3 anagrams.py \
     -d train_set_xy_2.csv \
     -t test_set_x_1.csv \
     -p 2 \
@@ -109,7 +111,7 @@ python anagrams.py \
 
 *With extension*
 ```
-python anagrams.py \
+python3 anagrams.py \
     -d train_set_xy_2.csv \
     -t test_set_x_1.csv \
     -p 1 2 \
@@ -117,7 +119,7 @@ python anagrams.py \
 ```
 #### To merge Anagram Detection into Naive-Bayes
 ```
-python manipsubmit.py \
+python3 manipsubmit.py \
     -i NB**.csv \
     -m AD*.csv \
     -o NB**+AD*.csv
@@ -125,8 +127,15 @@ python manipsubmit.py \
 
 ### Compare 2 CSV files (Header: Id,Category)
 ```
-python comparecsv.py \
+python3 comparecsv.py \
     -s new-submit.csv \
     -a old-submit.csv
 ```
 *Note: This script is useful to compare locally the output difference between a previously submitted csv file and a new generated one.*
+
+### Run Cross-Validation
+*Make sure to download the csv.tar.gz*  
+*Edit file `kfold.sh` and set the path to downloaded/extracted csv directory*
+```
+bash kfold.sh
+```

@@ -8,7 +8,7 @@ KFOLD_DIR="$CSV_PATH/kfold"
 function comparecsv() {
     k="$1"
     path="$2"
-    python "$TOOLS_DIR/comparecsv.py" \
+    python3 "$TOOLS_DIR/comparecsv.py" \
         -s "$KFOLD_DIR/results/$path/out$k" \
         -a "$KFOLD_DIR/valid/test$k" \
         | command grep -i "total"
@@ -20,7 +20,7 @@ function naivebayes() {
     outdir="NB"
     echo "Executing Naive-Bayes for k=$k"
     mkdir -p "$KFOLD_DIR/results/$outdir/"
-    python "$TOOLS_DIR/naivebayes.py" \
+    python3 "$TOOLS_DIR/naivebayes.py" \
         -i "$KFOLD_DIR/train/train$k" \
         -t "$KFOLD_DIR/test/test$k" \
         -o "$KFOLD_DIR/results/$outdir/out$k" > /dev/null
@@ -35,7 +35,7 @@ function naivebayes_f1() {
     rval="0.004"
     echo "Executing Naive-Bayes for k=$k and r=$rval"
     mkdir -p "$KFOLD_DIR/results/$outdir/"
-    python "$TOOLS_DIR/naivebayes.py" \
+    python3 "$TOOLS_DIR/naivebayes.py" \
         -i "$KFOLD_DIR/train/train$k" \
         -t "$KFOLD_DIR/test/test$k" \
         -o "$KFOLD_DIR/results/$outdir/out$k" \
@@ -51,7 +51,7 @@ function naivebayes_f1_f2() {
     rval="0.004"
     echo "Executing Naive-Bayes for k=$k, r=$rval and strict mode enabled"
     mkdir -p "$KFOLD_DIR/results/$outdir/"
-    python "$TOOLS_DIR/naivebayes.py" \
+    python3 "$TOOLS_DIR/naivebayes.py" \
         -i "$KFOLD_DIR/train/train$k" \
         -t "$KFOLD_DIR/test/test$k" \
         -o "$KFOLD_DIR/results/$outdir/out$k" \
@@ -67,13 +67,13 @@ function naivebayes_f1_f2_ad() {
     outdir="NB**+AD"
     echo "Executing Anagram Detection for k=$k"
     mkdir -p "$KFOLD_DIR/results/$outdir"
-    python "$TOOLS_DIR/anagrams.py" \
+    python3 "$TOOLS_DIR/anagrams.py" \
         -d "$KFOLD_DIR/train-em/train$k" \
         -t "$KFOLD_DIR/test-em/test$k" \
         -p 2 \
         -o "$KFOLD_DIR/results/$outdir/merge$k" > /dev/null
 
-    python "$TOOLS_DIR/manipsubmit.py" \
+    python3 "$TOOLS_DIR/manipsubmit.py" \
         -i "$KFOLD_DIR/results/NB**/out$k" \
         -m "$KFOLD_DIR/results/$outdir/merge$k" \
         -o "$KFOLD_DIR/results/$outdir/out$k" > /dev/null
@@ -87,13 +87,13 @@ function naivebayes_f1_f2_ad_f1() {
     outdir="NB**+AD*"
     echo "Executing Anagram [Subsequence] Detection for k=$k"
     mkdir -p "$KFOLD_DIR/results/$outdir"
-    python "$TOOLS_DIR/anagrams.py" \
+    python3 "$TOOLS_DIR/anagrams.py" \
         -d "$KFOLD_DIR/train-em/train$k" \
         -t "$KFOLD_DIR/test-em/test$k" \
         -p 1 2 \
         -o "$KFOLD_DIR/results/$outdir/merge$k" > /dev/null
 
-    python "$TOOLS_DIR/manipsubmit.py" \
+    python3 "$TOOLS_DIR/manipsubmit.py" \
         -i "$KFOLD_DIR/results/NB**/out$k" \
         -m "$KFOLD_DIR/results/$outdir/merge$k" \
         -o "$KFOLD_DIR/results/$outdir/out$k" > /dev/null
