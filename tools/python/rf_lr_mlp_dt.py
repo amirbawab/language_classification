@@ -37,9 +37,9 @@ def run(X_floats):
     algorithms = []
     algorithms.append(('Multinomial Naive Bayes (scikit-learn implementation)', MultinomialNB()))
     algorithms.append(('Decision Trees', DecisionTreeClassifier()))
-#    algorithms.append(('Logistic Regression', LogisticRegression()))
-#    algorithms.append(('Random Forests', RandomForestClassifier()))
-#    algorithms.append(('Multilayer Perceptron', MLPClassifier()))
+    algorithms.append(('Logistic Regression', LogisticRegression()))
+    algorithms.append(('Random Forests', RandomForestClassifier()))
+    algorithms.append(('Multilayer Perceptron', MLPClassifier()))
 
 
     results = []
