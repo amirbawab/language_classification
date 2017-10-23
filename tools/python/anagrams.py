@@ -11,13 +11,22 @@ class CLI:
         parser = argparse.ArgumentParser(description='Search for anagrams between two files')
         parser.add_argument('-d','--data', nargs=1, help='Data csv file. Id,Category,Text')
         parser.add_argument('-t','--test', nargs=1, help='Test csv file. Id,Text')
+        parser.add_argument('-p','--phase', nargs='+', help='Phase id: 1 for anagram subsequence and 2 for anagrams')
         parser.add_argument('-o','--output', nargs=1, help='Output csv file')
         args = parser.parse_args()
+
+        # Phases
+        phases = set()
 
         # Checkfor missing arguments
         if args.data is None or args.test is None or args.output is None:
             print("Missing arguments")
             exit(1)
+
+        # Add phases
+        if args.phase is not None:
+            for phase in args.phase:
+                phases.add(phase)
 
         # Files entries
         dEntries = []
@@ -67,63 +76,70 @@ class CLI:
         #################################
         # Phase 1: Anagrams subsequence #
         #################################
-        print(">> Starting phase 1: Anagrams Subsequence ...")
+        if '1' in phases:
+            print(">> Starting phase 1: Anagrams Subsequence ...")
 
-        # Create long keys
-        longTestEntries = list(x for x in tEntries if len(x['text']) == 20)
-        longTrainEntries = []
-        for entry in dTextCategory:
-            if len(entry) >= 21 and len(entry) <= 26:
-                longTrainEntries.append({'text': entry, 'category': dTextCategory[entry]})
+            # Create long keys
+            longTestEntries = list(x for x in tEntries if len(x['text']) == 20)
+            longTrainEntries = []
+            for entry in dTextCategory:
+                if len(entry) >= 21 and len(entry) <= 27:
+                    longTrainEntries.append({'text': entry, 'category': dTextCategory[entry]})
 
-        # Compare entries
-        progress = 0
-        match = 0
-        for testEntry in longTestEntries:
-            # Log progress
-            if progress % 100 == 0:
-                print(">> Completed {} out of {} long test entries, with {} matches".format(
-                    progress, len(longTestEntries), match))
-            
-            # Start comparing test and training entries    
-            categoriesCounter = {}
-            for trainEntry in longTrainEntries:
-                testIndex = 0
-                trainIndex = 0
-                while testIndex < len(testEntry['text']) and trainIndex < len(trainEntry['text']):
-                    if testEntry['text'][testIndex] == trainEntry['text'][trainIndex]:
-                        testIndex += 1
-                        trainIndex += 1
-                    elif testEntry['text'][testIndex] < trainEntry['text'][trainIndex]:
-                        break
-                    else:
-                        trainIndex += 1
-
-                if testIndex == len(testEntry['text']):
-                    if trainEntry['category'] not in categoriesCounter:
-                        categoriesCounter[trainEntry['category']] = 0
-                    categoriesCounter[trainEntry['category']] += 1
-
-            # Select the best category
-            selectedCategory = -1
-            for tmpCategory in categoriesCounter:
-                if selectedCategory == -1 or categoriesCounter[selectedCategory] < categoriesCounter[tmpCategory]:
-                    selectedCategory = tmpCategory
+            # Compare entries
+            progress = 0
+            match = 0
+            for testEntry in longTestEntries:
+                # Log progress
+                if progress % 100 == 0:
+                    print(">> Completed {} out of {} long test entries, with {} matches".format(
+                        progress, len(longTestEntries), match))
                 
-            # Store selected category
-            outEntries[testEntry['id']] = selectedCategory
-            if selectedCategory != -1:
-                match+=1
-            progress+=1
+                # Start comparing test and training entries    
+                categoriesCounter = {}
+                for trainEntry in longTrainEntries:
+                    testIndex = 0
+                    trainIndex = 0
+                    while testIndex < len(testEntry['text']) and trainIndex < len(trainEntry['text']):
+                        if testEntry['text'][testIndex] == trainEntry['text'][trainIndex]:
+                            testIndex += 1
+                            trainIndex += 1
+                        elif testEntry['text'][testIndex] < trainEntry['text'][trainIndex]:
+                            break
+                        else:
+                            trainIndex += 1
+
+                    if testIndex == len(testEntry['text']):
+                        if trainEntry['category'] not in categoriesCounter:
+                            categoriesCounter[trainEntry['category']] = 0
+                        categoriesCounter[trainEntry['category']] += 1
+
+                # Select the best category
+                selectedCategory = -1
+                for tmpCategory in categoriesCounter:
+                    if selectedCategory == -1 or categoriesCounter[selectedCategory] < categoriesCounter[tmpCategory]:
+                        selectedCategory = tmpCategory
+                    
+                # Store selected category
+                outEntries[testEntry['id']] = selectedCategory
+                if selectedCategory != -1:
+                    match+=1
+                progress+=1
+        else:
+            print(">> Skipping phase 1")
+
 
         #####################################
         # Phase 2: Anagrams of equal length #
         #####################################
-        print(">> Starting phase 2: Anagrams of equal length ...")
+        if '2' in phases:
+            print(">> Starting phase 2: Anagrams of equal length ...")
 
-        for entry in tEntries:
-            if entry['text'] in dTextCategory:
-                outEntries[entry['id']] = dTextCategory[entry['text']]
+            for entry in tEntries:
+                if entry['text'] in dTextCategory:
+                    outEntries[entry['id']] = dTextCategory[entry['text']]
+        else:
+            print(">> Skipping phase 2")
 
         # Prepare output
         print(">> Generating csv file:", args.output[0])

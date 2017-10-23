@@ -1,7 +1,7 @@
 #!/bin/bash
 
-CSV_PATH="/tmp/csv"
-TOOLS_DIR="/tmp/tools"
+CSV_PATH="/../../csv"
+TOOLS_DIR="$PWD"
 KFOLD_DIR="$CSV_PATH/kfold"
 
 # Compare generated csv with the actual answer
@@ -31,7 +31,7 @@ function naivebayes() {
 # Naive-bayes with filter 1
 function naivebayes_f1() {
     k=$1
-    outdir="NB+F1"
+    outdir="NB*"
     rval="0.004"
     echo "Executing Naive-Bayes for k=$k and r=$rval"
     mkdir -p "$KFOLD_DIR/results/$outdir/"
@@ -47,7 +47,7 @@ function naivebayes_f1() {
 # Naive-bayes with filter 1 and filter 2
 function naivebayes_f1_f2() {
     k=$1
-    outdir="NB+F1+F2"
+    outdir="NB**"
     rval="0.004"
     echo "Executing Naive-Bayes for k=$k, r=$rval and strict mode enabled"
     mkdir -p "$KFOLD_DIR/results/$outdir/"
@@ -61,38 +61,40 @@ function naivebayes_f1_f2() {
     comparecsv "$k" "$outdir"
 }
 
-# Naive-bayes with filter 1, filter 2, Recover Data
-function naivebayes_f1_f2_rd() {
+# Naive-bayes with filter 1, filter 2, Anagrams
+function naivebayes_f1_f2_ad() {
     k=$1
-    outdir="NB+F1+F2+RD"
-    echo "Executing Recover data for k=$k"
+    outdir="NB**+AD"
+    echo "Executing Anagram Detection for k=$k"
     mkdir -p "$KFOLD_DIR/results/$outdir"
-    python "$TOOLS_DIR/recover-data.py" \
+    python "$TOOLS_DIR/anagrams.py" \
         -d "$KFOLD_DIR/train-em/train$k" \
         -t "$KFOLD_DIR/test-em/test$k" \
+        -p 2 \
         -o "$KFOLD_DIR/results/$outdir/merge$k" > /dev/null
 
     python "$TOOLS_DIR/manipsubmit.py" \
-        -i "$KFOLD_DIR/results/NB+F1+F2/out$k" \
-        -m "$KFOLD_DIR/results/$outdir/merge$k-0" \
+        -i "$KFOLD_DIR/results/NB**/out$k" \
+        -m "$KFOLD_DIR/results/$outdir/merge$k" \
         -o "$KFOLD_DIR/results/$outdir/out$k" > /dev/null
     
     comparecsv "$k" "$outdir"
 }
 
-# Naive-bayes with filter 1, filter 2, Recover Data and Exact Match
-function naivebayes_f1_f2_rd_em() {
+# Naive-bayes with filter 1, filter 2, Anagrams with extention
+function naivebayes_f1_f2_ad_f1() {
     k=$1
-    outdir="NB+F1+F2+RD+EM"
-    echo "Executing Exact Match for k=$k"
+    outdir="NB**+AD*"
+    echo "Executing Anagram [Subsequence] Detection for k=$k"
     mkdir -p "$KFOLD_DIR/results/$outdir"
-    python "$TOOLS_DIR/exact-match.py" \
+    python "$TOOLS_DIR/anagrams.py" \
         -d "$KFOLD_DIR/train-em/train$k" \
         -t "$KFOLD_DIR/test-em/test$k" \
+        -p 1 2 \
         -o "$KFOLD_DIR/results/$outdir/merge$k" > /dev/null
 
     python "$TOOLS_DIR/manipsubmit.py" \
-        -i "$KFOLD_DIR/results/NB+F1+F2+RD/out$k" \
+        -i "$KFOLD_DIR/results/NB**/out$k" \
         -m "$KFOLD_DIR/results/$outdir/merge$k" \
         -o "$KFOLD_DIR/results/$outdir/out$k" > /dev/null
 
@@ -104,7 +106,7 @@ do
     naivebayes $k
     naivebayes_f1 $k
     naivebayes_f1_f2 $k
-    naivebayes_f1_f2_rd $k
-    naivebayes_f1_f2_rd_em $k
+    naivebayes_f1_f2_ad $k
+    naivebayes_f1_f2_ad_f1 $k
     echo "----------------------"
 done
