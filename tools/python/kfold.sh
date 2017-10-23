@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CSV_PATH="/../../csv"
+CSV_PATH="/tmp/csv"
 TOOLS_DIR="$PWD"
 KFOLD_DIR="$CSV_PATH/kfold"
 
