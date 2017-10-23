@@ -124,7 +124,16 @@ python3 manipsubmit.py \
     -m AD*.csv \
     -o NB**+AD*.csv
 ```
-
+### To run Random Forests, Multilayer Perceptron, Logistic Regression, Decision Trees, and Multinomial Naive Bayes (sklearn)
+#####
+*To run these algorithms:
+```
+python2 rf_lr_mlp_dt.py train_set_xy_1.csv
+```
+*To run these algorithms AND plot the graph:
+```
+python2 rf_lr_mlp_dt.py train_set_xy_1.csv -plot
+```
 ### Compare 2 CSV files (Header: Id,Category)
 ```
 python3 comparecsv.py \
