@@ -33,7 +33,7 @@ python csv2csv.py \
 ```
 python maniptest.py \
     -i test_set_x.csv \
-    -o /tmp/test_set_x_1.csv \
+    -o test_set_x_1.csv \
     -a no_space sort_lex
 ```
 
@@ -95,3 +95,38 @@ python naivebayes.py \
     -s \
     -o NB**.csv
 ```
+
+### Anagram Detection
+#### To run Anagram Detection
+*Without extension*
+```
+python anagrams.py \
+    -d train_set_xy_2.csv \
+    -t test_set_x_1.csv \
+    -p 2 \
+    -o AD.csv
+```
+
+*With extension*
+```
+python anagrams.py \
+    -d train_set_xy_2.csv \
+    -t test_set_x_1.csv \
+    -p 1 2 \
+    -o AD*.csv
+```
+#### To merge Anagram Detection into Naive-Bayes
+```
+python manipsubmit.py \
+    -i NB**.csv \
+    -m AD*.csv \
+    -o NB**+AD*.csv
+```
+
+### Compare 2 CSV files (Header: Id,Category)
+```
+python comparecsv.py \
+    -s new-submit.csv \
+    -a old-submit.csv
+```
+*Note: This script is useful to compare locally the output difference between a previously submitted csv file and a new generated one.*
