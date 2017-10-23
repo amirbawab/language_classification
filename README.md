@@ -8,7 +8,7 @@ This is a project for COMP-551 Applied Machine Learning. For this task, we would
 ## Commands
 *All scripts used in this section are available under `tools/python/` directory*
 
-**All scripts has been test on &ast;nix machines only, and there is no guarantee to work on other platforms**
+**All scripts has been tested on &ast;nix machines only, and there is no guarantee to work on other platforms**
 
 ### Generate csv files
 
@@ -143,7 +143,7 @@ python3 comparecsv.py \
 *Note: This script is useful to compare locally the output difference between a previously submitted csv file and a new generated one.*
 
 ### Run Cross-Validation
-*Make sure to download the <a href="https://goo.gl/UkHUDQ">csv.tar.gz</a> for the required train and test files*  
+*Make sure to download the <a href="https://goo.gl/Bvm8t7">csv.tar.gz</a> for the required train and test files*  
 *Edit file `kfold.sh` and set the path to downloaded/extracted csv directory*
 ```
 bash kfold.sh
